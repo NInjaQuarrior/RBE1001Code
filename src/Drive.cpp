@@ -1,5 +1,5 @@
 #include <RBE1001Lib.h>
-#include <cmath>
+#define PI 3.14159265358979323846
 
 class Drive
 {
@@ -35,7 +35,7 @@ public:
  * */
     boolean driveInches(float inches, float speed)
     {
-        float moveDegrees = (inches / (2 * (M_PI) * (WHEEL_DIAMETER / 2))) * 360;
+        float moveDegrees = (inches / (2 * PI * (WHEEL_DIAMETER / 2))) * 360;
 
         left.startMoveFor(moveDegrees, speed);
         right.moveFor(moveDegrees, speed);
