@@ -5,7 +5,7 @@ class Ultrasonic
 {
 private:
     Rangefinder ultra;
-    float centiConversion = 0.3937008;
+    float centiConversion = 2.54f;
 
 public:
     float getDistanceCM()
@@ -14,6 +14,6 @@ public:
     }
     float getDistanceIN()
     {
-        return ultra.getDistanceCM() * centiConversion;
+        return ultra.getDistanceCM() * (1 / centiConversion);
     }
 };

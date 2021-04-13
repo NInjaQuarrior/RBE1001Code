@@ -9,6 +9,7 @@ private:
 
     //constant wheel diameter
     float WHEEL_DIAMETER = 2.75f;
+    float centiConversion = 2.54f;
 
 public:
     /**
@@ -44,6 +45,22 @@ public:
     }
 
     /**
+ * drive straight a certain amount of inches
+ * @param centi centimeters to move, negative to go backwars
+ * @param speed degrees per second to move
+ * 
+ * */
+    boolean driveCentimeters(float centi, float speed)
+    {
+        float moveDegrees = (centi / (2 * PI * ((WHEEL_DIAMETER / centiConversion) / 2))) * 360;
+
+        left.startMoveFor(moveDegrees, speed);
+        right.moveFor(moveDegrees, speed);
+
+        return true;
+    }
+
+    /**
  * drive based on effort
  * @param effort -1  to 1
  * 
@@ -68,7 +85,7 @@ public:
     /**
  * Makes a shape
  * @param sides numbers of side for the shape
- * @param sideLength  the length of each side
+ * @param sideLength  the length of each side in inches
  * @param speed degrees per second to move while making shape
  * 
  * */
@@ -86,7 +103,7 @@ public:
     /**
  * makes a spiral shape in the shape of the side put in, ie 4 side for square spiral
  * 
- * @param baseLength the length of the first side
+ * @param baseLength the length of the first side in inches
  * @param speed, degrees per second to move
  * @param sides number of sides before completing on spiral
  * @param spiralAmount number of complete spirals to make
