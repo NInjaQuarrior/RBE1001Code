@@ -8,6 +8,7 @@ Drive drive;
 void setup()
 {
   // put your setup code here, to run once:
+  ultra.attach();
   delay(8000);
 }
 

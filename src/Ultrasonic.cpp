@@ -16,4 +16,8 @@ public:
     {
         return ultra.getDistanceCM() * (1 / centiConversion);
     }
+
+    void attach(){
+        ultra.attach(SIDE_ULTRASONIC_TRIG, SIDE_ULTRASONIC_ECHO);
+    }
 };
