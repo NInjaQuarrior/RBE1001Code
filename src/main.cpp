@@ -1,14 +1,19 @@
 #include <RBE1001Lib.h>
 #include <Drive.cpp>
 #include <Ultrasonic.cpp>
+#include <LineSense.cpp>
 
+//Ultrasonic ultra;
 Ultrasonic ultra;
 Drive drive;
+LineSense lSensor;
 
 void setup()
 {
   // put your setup code here, to run once:
   ultra.attach();
+  lSensor.attach();
+  Serial.begin(9600);
   delay(8000);
 }
 
@@ -16,16 +21,9 @@ boolean doneThing = false;
 void loop()
 {
 
-  if (ultra.getDistanceIN() < 11)
-  {
-    drive.setEffort(1);
-  }
-  else
-  {
-    drive.setEffort(0);
-  }
-  //driveInches(5, 270);
-  // if (doneThing == false && makeSquareSpiral(5, 450))
+  drive.followLine(lSensor.getDifference());
+  //drive.driveToInches(11, ultra.getDistanceIN());
+  //  if (doneThing == false && drive.driveToInches(11, ultra.getDistanceIN()))
   // {
   //   doneThing = true;
   // }

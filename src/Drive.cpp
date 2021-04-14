@@ -11,6 +11,12 @@ private:
     float WHEEL_DIAMETER = 2.75f;
     float centiConversion = 2.54f;
 
+    float ultraProp = .07;
+    float ultraDead = .35;
+
+    float lineBaseSpeed = .2;
+    float lineProp = .09;
+
 public:
     /**
  * turns a certain amount of degrees
@@ -18,7 +24,8 @@ public:
  * @param speed degrees per second to move
  * 
  * */
-    boolean turn(float degrees, float speed)
+    boolean
+    turn(float degrees, float speed)
     {
 
         float moveDegrees = 2 * degrees;
@@ -118,5 +125,26 @@ public:
             turn(turnDegrees, speed);
         }
         return true;
+    }
+
+    boolean driveToInches(float inches, float distanceIN)
+    {
+
+        float offset = distanceIN - inches;
+        float effort = offset * ultraProp;
+
+        if (distanceIN > inches - ultraDead && distanceIN < inches + ultraDead)
+        {
+            setEffort(0);
+            return true;
+        }
+        setEffort(effort);
+        return false;
+    }
+
+    void followLine(float error)
+    {
+        left.setEffort(lineBaseSpeed + (error * lineProp));
+        right.setEffort(lineBaseSpeed - (error * lineProp));
     }
 };
