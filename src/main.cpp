@@ -21,7 +21,8 @@ boolean doneThing = false;
 void loop()
 {
 
-  drive.followLine(lSensor.getDifference());
+  drive.followLine(lSensor.getDifference(), lSensor.getLeft(), lSensor.getRight());
+
   //drive.driveToInches(11, ultra.getDistanceIN());
   //  if (doneThing == false && drive.driveToInches(11, ultra.getDistanceIN()))
   // {

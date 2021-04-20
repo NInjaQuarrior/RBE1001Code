@@ -11,11 +11,15 @@ private:
     float WHEEL_DIAMETER = 2.75f;
     float centiConversion = 2.54f;
 
-    float ultraProp = .07;
-    float ultraDead = .35;
+    float ultraProp = .07f;
+    float ultraDead = .35f;
 
-    float lineBaseSpeed = .2;
-    float lineProp = .09;
+    float lineBaseSpeed = .2f;
+    float lineProp = .08f;
+
+    float lineFollowTurnDead = .5f;
+
+    float lineSenseBlack = 2.0f;
 
 public:
     /**
@@ -142,9 +146,22 @@ public:
         return false;
     }
 
-    void followLine(float error)
+    boolean isTurning = false;
+    void followLine(float error, float leftSense, float rightSense)
     {
-        left.setEffort(lineBaseSpeed + (error * lineProp));
-        right.setEffort(lineBaseSpeed - (error * lineProp));
+        if (leftSense > lineSenseBlack && rightSense > lineSenseBlack /*&& error < lineFollowTurnDead*/)
+        {
+            isTurning = true;
+            if (turn(180, 360))
+            {
+                isTurning = false;
+            }
+        }
+        else if (isTurning == false)
+        {
+
+            left.setEffort(lineBaseSpeed + (error * lineProp));
+            right.setEffort(lineBaseSpeed - (error * lineProp));
+        }
     }
 };
