@@ -1,31 +1,40 @@
 #include <RBE1001Lib.h>
+#include <IRdecoder.h>
+#include <RemoteConstants.h>
 #include <Drive.cpp>
 #include <Ultrasonic.cpp>
 #include <LineSense.cpp>
+#include <ArmServo.cpp>
 
-//Ultrasonic ultra;
 Ultrasonic ultra;
 Drive drive;
 LineSense lSensor;
+ArmServo servo;
+
+const uint8_t IR_DETECTOR_PIN = 15;
+IRDecoder decoder(15);
 
 void setup()
 {
   // put your setup code here, to run once:
   ultra.attach();
   lSensor.attach();
+  servo.attach();
   Serial.begin(9600);
-  delay(8000);
+  decoder.init();
+  delay(4000);
 }
 
 boolean doneThing = false;
 void loop()
 {
+  // Check for a key press on the remote
+  int16_t keyPress = decoder.getKeyCode();
 
-  drive.followLine(lSensor.getDifference(), lSensor.getLeft(), lSensor.getRight());
-
-  //drive.driveToInches(11, ultra.getDistanceIN());
-  //  if (doneThing == false && drive.driveToInches(11, ultra.getDistanceIN()))
-  // {
-  //   doneThing = true;
-  // }
+  // If a valid key is pressed, print out its value
+  if (keyPress >= 0)
+  {
+    Serial.println("Key: " + String(keyPress));
+    drive.setButton(keyPress);
+  }
 }
