@@ -11,8 +11,7 @@ private:
     Servo servo;
 
 public:
-    void
-    attach()
+    void attach()
     {
         servo.attach(servoPin);
     }

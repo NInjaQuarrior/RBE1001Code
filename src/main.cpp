@@ -5,6 +5,8 @@
 #include <Ultrasonic.cpp>
 #include <LineSense.cpp>
 #include <ArmServo.cpp>
+#include <ESP32Servo.h>
+#include <ESP32AnalogRead.h>
 
 Ultrasonic ultra;
 Drive drive;
@@ -22,6 +24,7 @@ void setup()
   servo.attach();
   Serial.begin(9600);
   decoder.init();
+  servo.moveMidPosition();
   delay(4000);
 }
 
