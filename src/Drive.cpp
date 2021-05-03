@@ -20,8 +20,11 @@ private:
     //deadband for moving to a distance with ultra
     float ULTRA_DEAD = .35f;
 
+    //speed while using ultra
+    float ULTRA_DRIVE = 90;
+
     //deadband for finding an object(bag) with thge ultra
-    float FIND_BAG_DEAD = 20;
+    float FIND_BAG_DEAD = 5;
 
     //base follow line speed
     float LINE_BASE_SPEED = .2f;
@@ -33,22 +36,24 @@ private:
     float LINE_SENSE_BLACK = 2.0f;
 
     //angle to turn before looking for object(bag)
-    float Turn_SET_UP_ANGLE = 45.0f;
+    float Turn_SET_UP_ANGLE = 20.0f;
 
     //turn speed in degrees per second
     float TURN_SPEED = 270.0f;
 
     //angle to scan while looking for object
-    float SCAN_ANGLE = 90.0f;
+    float SCAN_ANGLE = 150.0f;
 
     //speed to turn while scanning for object in degrees per second
     float SCAN_SPEED = 270.0f;
 
     //distance to stop away from bag to pick it up
-    float DIST_FROM_BAG = 5.0f; //TODO tune
+    float DIST_FROM_BAG = 2.5f; //TODO tune
 
     //speed to drive in degrees per second
     float DRIVE_SPEED = 270.0f;
+
+    float MAX_DIST = 40;
 
     //end constants=========================================
 
@@ -69,6 +74,7 @@ private:
         TURN_RETURN,
         TURN_TWO,
         DRIVE_RETURN,
+        DRIVE_TO_LINE,
         DONE_RETURN
     };
 
@@ -81,8 +87,7 @@ public:
     * @param speed degrees per second to move
     * 
     */
-    boolean
-    turn(float degrees, float speed)
+    boolean turn(float degrees, float speed)
     {
 
         float moveDegrees = 2 * degrees;
@@ -90,6 +95,25 @@ public:
         right.moveFor(-moveDegrees, speed);
 
         return true;
+    }
+
+    /**
+     * turn until not called
+     * @param direct -1 for left, 1 for right
+     * @param speed in degrees for second
+     */
+    void turnContinuos(int direct, float speed)
+    {
+        if (direct <= 0)
+        {
+            left.setSpeed(-speed);
+            right.setSpeed(speed);
+        }
+        else if (direct >= 0)
+        {
+            left.setSpeed(speed);
+            right.setSpeed(-speed);
+        }
     }
 
     /**
@@ -259,15 +283,15 @@ public:
     boolean driveToInches(float inches, float distanceIN)
     {
 
-        float offset = distanceIN - inches;
-        float effort = offset * ULTRA_PROP;
+        //float offset = distanceIN - inches;
+        //float effort = offset * ULTRA_PROP; // for p control
 
         if (distanceIN > inches - ULTRA_DEAD && distanceIN < inches + ULTRA_DEAD)
         {
             setEffort(0);
             return true;
         }
-        setEffort(effort);
+        setSpeed(ULTRA_DRIVE);
         return false;
     }
 
@@ -278,24 +302,60 @@ public:
      * follows the black line using p control
      * @param error the currect difference between the two line sensors
      * @param leftSense the current value of left Sensor
-     * @param the current value of the right sensor
+     * @param rightSense current value of the right sensor
      */
     void followLine(float error, float leftSense, float rightSense)
     {
+        left.setEffort(LINE_BASE_SPEED + (error * LINE_PROP));
+        right.setEffort(LINE_BASE_SPEED - (error * LINE_PROP));
+    }
+
+    /**
+     * drive until find a line
+     * @param speed the speed in degrees per second
+     * @param leftSense the current value of left Sensor
+     * @param rightSense current value of the right sensor
+     */
+    boolean driveTillLine(float speed, float leftSense, float rightSense)
+    {
         if (leftSense > LINE_SENSE_BLACK && rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
         {
-            isTurning = true;
-            if (turn(180, TURN_SPEED))
+            return true;
+        }
+        setSpeed(speed);
+        return false;
+    }
+
+    /**
+     * turn until find a line
+     * 
+    * @param direct -1 for left, 1 for right
+    * @param leftSense the current value of left Sensor
+    * @param rightSense current value of the right sensor
+    */
+    boolean alignToLine(int direct, float leftSense, float rightSense)
+    {
+        if (direct < 0)
+        {
+            if (rightSense > LINE_SENSE_BLACK - 1)
             {
-                isTurning = false;
+                left.setSpeed(0);
+                right.setSpeed(0);
+                return true;
             }
         }
-        else if (isTurning == false)
+        else if (direct >= 0)
         {
-
-            left.setEffort(LINE_BASE_SPEED + (error * LINE_PROP));
-            right.setEffort(LINE_BASE_SPEED - (error * LINE_PROP));
+            if (leftSense > LINE_SENSE_BLACK - 1)
+            {
+                left.setSpeed(0);
+                right.setSpeed(0);
+                return true;
+            }
         }
+
+        turnContinuos(direct, 90);
+        return false;
     }
 
     //store bag start angle
@@ -304,15 +364,16 @@ public:
     int bagEndAngle = 0;
     //store the angle of the center of the bag
     float bagCenter = 0;
-    //store how far the robot moved away from the line
-    float distFromLine = 0;
+    //store previous ultra distance
+    float prevDist = 0;
+    //counter for finding bag angle
+    int counter = 1;
 
     /**
      * starting on the line, search for the bag, and drive to it prepared to pick it up
-     * @param distLast the ultrasonic distance before hiting the bag in inches
      * @param curDist the ultrasonic get distance in inches
      */
-    boolean findBag(float distLast, float curDist)
+    boolean findBag(float curDist)
     {
         switch (scanState)
         {
@@ -322,29 +383,33 @@ public:
 
             if (turn(Turn_SET_UP_ANGLE, TURN_SPEED))
             {
+                prevDist = curDist;
                 scanState = SCANNING;
             }
             break;
         case SCANNING:
-            for (int i = 1; i <= SCAN_ANGLE; i++)
+
+            if (counter <= SCAN_ANGLE)
             {
                 turn(1, SCAN_SPEED);
-                if (distLast > FIND_BAG_DEAD && bagStartAngle == 0)
+                if (prevDist > curDist && bagStartAngle == 0 && (prevDist - curDist) > FIND_BAG_DEAD && curDist < MAX_DIST)
                 {
-                    bagStartAngle = i;
+
+                    prevDist = curDist;
+                    bagStartAngle = counter;
                 }
-                else if (distLast > FIND_BAG_DEAD)
+                else if (bagStartAngle != 0 && prevDist < curDist && (curDist - prevDist) > FIND_BAG_DEAD)
                 {
-                    bagEndAngle = i;
+                    bagEndAngle = counter;
+                    scanState = TURN_TO;
                 }
+                counter++;
             }
-            scanState = TURN_TO;
             break;
         case TURN_TO:
             bagCenter = bagEndAngle - bagStartAngle;
-            if (turn(-(bagCenter), TURN_SPEED))
+            if (turn(-(bagCenter / 2 - 7), 270))
             {
-                distFromLine = curDist;
                 scanState = DRIVE_SCAN;
             }
             break;
@@ -366,32 +431,44 @@ public:
     }
     /**
      * returns from the free zone after picking up the bag
+     * @param leftSense left light sensor
+     * @param rightSense right light sensor
      */
-    boolean returnFromFree()
+    boolean returnFromFree(float leftSense, float rightSense)
     {
         switch (returnState)
         {
         case TURN_RETURN:
-            if (turn((-(Turn_SET_UP_ANGLE + SCAN_ANGLE - bagCenter)) - 90, TURN_SPEED))
+            if (turn(-(Turn_SET_UP_ANGLE + (bagCenter / 2)) - 280, 150))
             {
                 returnState = DRIVE_RETURN;
             }
             break;
         case DRIVE_RETURN:
-            if (driveInches(distFromLine, DRIVE_SPEED))
+            if (driveTillLine(DRIVE_SPEED, leftSense, rightSense))
+            {
+                returnState = DRIVE_TO_LINE;
+            }
+            break;
+        case DRIVE_TO_LINE:
+            if (driveInches(3, DRIVE_SPEED))
             {
                 returnState = TURN_TWO;
             }
             break;
         case TURN_TWO:
-            if (turn(-90, TURN_SPEED)) //face the drop area TODO find turn left or right
+            // if (alignToLine(1, leftSense, rightSense)) //face the drop area TODO find turn left or right
+            // {
+            //     returnState = DONE_RETURN;
+            // }
+            if (turn(90, 270))
             {
                 returnState = DONE_RETURN;
             }
             break;
         case DONE_RETURN:
             bagCenter = 0;
-            distFromLine = 0;
+            counter = 1;
             returnState = TURN_RETURN;
             return true;
             break;

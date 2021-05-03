@@ -20,6 +20,8 @@ enum FreeZoneState
 {
   INIT,
   GO_TO_BAG,
+  TURN_AROUND,
+  REVERSE,
   PICK_UP,
   RETURN_TO_LINE,
   DONE
@@ -39,46 +41,33 @@ void setup()
   delay(4000);
 }
 
-boolean doneThing = false;
-void loop()
-{
-  // Check for a key press on the remote
-  int16_t keyPress = decoder.getKeyCode();
-
-  // If a valid key is pressed, print out its value
-  if (keyPress >= 0)
-  {
-    Serial.println("Key: " + String(keyPress));
-    drive.teleOp(keyPress);
-  }
-}
-
 void autonomous()
 {
-  
 }
-
-float bigDist = 0;
-boolean gotDist = false;
 
 boolean pickUpBagFree()
 {
-  if (gotDist == false)
-  {
-    bigDist = ultra.getDistanceIN();
-    gotDist = true;
-  }
+
   switch (freeZoneState)
   {
   case INIT:
     servo.moveDownPosition();
-    if (drive.turn(45, 270))
-    {
-      freeZoneState = GO_TO_BAG;
-    }
+    freeZoneState = GO_TO_BAG;
     break;
   case GO_TO_BAG:
-    if (drive.findBag(bigDist, ultra.getDistanceIN()))
+    if (drive.findBag(ultra.getDistanceIN()))
+    {
+      freeZoneState = TURN_AROUND;
+    }
+    break;
+  case TURN_AROUND:
+    if (drive.turn(190, 270))
+    {
+      freeZoneState = REVERSE;
+    }
+    break;
+  case REVERSE:
+    if (drive.driveInches(-2, 270))
     {
       freeZoneState = PICK_UP;
     }
@@ -88,17 +77,42 @@ boolean pickUpBagFree()
     freeZoneState = RETURN_TO_LINE;
     break;
   case RETURN_TO_LINE:
-    if (drive.returnFromFree())
+    if (drive.returnFromFree(lSensor.getLeft(), lSensor.getRight()))
     {
       freeZoneState = DONE;
     }
     break;
   case DONE:
     freeZoneState = INIT;
-    gotDist = false;
-    bigDist = 0;
     return true;
     break;
   }
   return false;
+}
+
+boolean doneThing = false;
+void loop()
+{
+  // Check for a key press on the remote
+  int16_t keyPress = decoder.getKeyCode();
+
+  //Serial.printf("%f", ultra.getDistanceIN());
+  //Serial.println("");
+  if (doneThing == false)
+  {
+    if (pickUpBagFree())
+    {
+      doneThing = true;
+    }
+  }
+  else
+  {
+    drive.followLine(lSensor.getDifference(), lSensor.getLeft(), lSensor.getRight());
+  }
+  // If a valid key is pressed, print out its value
+  // if (keyPress >= 0)
+  // {
+  //   Serial.println("Key: " + String(keyPress));
+  //   drive.teleOp(keyPress);
+  // }
 }

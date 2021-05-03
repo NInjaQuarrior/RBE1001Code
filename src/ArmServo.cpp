@@ -8,9 +8,9 @@ private:
     int servoPin = 33;
 
     //arm in up pos
-    int upPos = 0;
+    int upPos = 180;
     //arm in down pos
-    int downPos = 180;
+    int downPos = 0;
     //arm parallel to ground
     int midPos = 70;
 
@@ -36,7 +36,7 @@ public:
  */
     void moveMidPosition()
     {
-        servo.write(upPos);
+        servo.write(midPos);
     }
 
     /**
@@ -44,6 +44,6 @@ public:
  */
     void moveUpPosition()
     {
-        servo.write(downPos);
+        servo.write(upPos);
     }
 };
