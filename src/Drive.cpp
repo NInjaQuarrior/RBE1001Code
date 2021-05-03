@@ -1,6 +1,6 @@
 #include <RBE1001Lib.h>
 #include <RemoteConstants.h>
-#define PI 3.14159265358979323846
+//#define PI 3.14159265358979323846
 
 class Drive
 {
@@ -8,42 +8,79 @@ private:
     LeftMotor left;
     RightMotor right;
 
-    //constant wheel diameter
+    //constantss ======================================
     float WHEEL_DIAMETER = 2.75f;
-    float centiConversion = 2.54f;
 
-    float ultraProp = .07f;
-    float ultraDead = .35f;
+    //centi to inch conversion
+    float CENTI_CONV = 2.54f;
 
-    float findBagDead = 20;
+    //Kp for the ultra moving
+    float ULTRA_PROP = .07f;
 
-    float lineBaseSpeed = .2f;
-    float lineProp = .08f;
+    //deadband for moving to a distance with ultra
+    float ULTRA_DEAD = .35f;
 
-    float lineFollowTurnDead = .5f;
+    //deadband for finding an object(bag) with thge ultra
+    float FIND_BAG_DEAD = 20;
 
-    float lineSenseBlack = 2.0f;
+    //base follow line speed
+    float LINE_BASE_SPEED = .2f;
 
-    //code stuffs
-    boolean isTurning = false;
+    //Kp for following the line
+    float LINE_PROP = .08f;
 
+    //voltage value for determining if a sensor is over the line
+    float LINE_SENSE_BLACK = 2.0f;
+
+    //angle to turn before looking for object(bag)
+    float Turn_SET_UP_ANGLE = 45.0f;
+
+    //turn speed in degrees per second
+    float TURN_SPEED = 270.0f;
+
+    //angle to scan while looking for object
+    float SCAN_ANGLE = 90.0f;
+
+    //speed to turn while scanning for object in degrees per second
+    float SCAN_SPEED = 270.0f;
+
+    //distance to stop away from bag to pick it up
+    float DIST_FROM_BAG = 5.0f; //TODO tune
+
+    //speed to drive in degrees per second
+    float DRIVE_SPEED = 270.0f;
+
+    //end constants=========================================
+
+    //for scanning for object(bag)
     enum ScanState
     {
-        INIT,
+        INIT_SCAN,
         SCANNING,
         TURN_TO,
-        DRIVE,
-        DONE
+        DRIVE_SCAN,
+        DONE_SCAN
     };
-    ScanState scanState = INIT;
+    ScanState scanState = INIT_SCAN;
+
+    //for returning to line from picking up bag from free zone
+    enum ReturnState
+    {
+        TURN_RETURN,
+        TURN_TWO,
+        DRIVE_RETURN,
+        DONE_RETURN
+    };
+
+    ReturnState returnState = TURN_RETURN;
 
 public:
     /**
- * turns a certain amount of degrees
- * @param degrees degrees to turn, negative to turn counter-clockwise
- * @param speed degrees per second to move
- * 
- * */
+    * turns a certain amount of degrees
+    * @param degrees degrees to turn, negative to turn counter-clockwise
+    * @param speed degrees per second to move
+    * 
+    */
     boolean
     turn(float degrees, float speed)
     {
@@ -56,11 +93,11 @@ public:
     }
 
     /**
- * drive straight a certain amount of inches
- * @param inches inches to move, negative to go backwars
- * @param speed degrees per second to move
- * 
- * */
+    * drive straight a certain amount of inches
+    * @param inches inches to move, negative to go backwars
+    * @param speed degrees per second to move
+    * 
+    */
     boolean driveInches(float inches, float speed)
     {
         float moveDegrees = (inches / (2 * PI * (WHEEL_DIAMETER / 2))) * 360;
@@ -72,14 +109,14 @@ public:
     }
 
     /**
- * drive straight a certain amount of inches
- * @param centi centimeters to move, negative to go backwars
- * @param speed degrees per second to move
- * 
- * */
+    * drive straight a certain amount of inches
+    * @param centi centimeters to move, negative to go backwars
+    * @param speed degrees per second to move
+    * 
+    */
     boolean driveCentimeters(float centi, float speed)
     {
-        float moveDegrees = (centi / (2 * PI * ((WHEEL_DIAMETER / centiConversion) / 2))) * 360;
+        float moveDegrees = (centi / (2 * PI * ((WHEEL_DIAMETER / CENTI_CONV) / 2))) * 360;
 
         left.startMoveFor(moveDegrees, speed);
         right.moveFor(moveDegrees, speed);
@@ -88,10 +125,9 @@ public:
     }
 
     /**
- * drive based on effort
- * @param effort -1  to 1
- * 
- * */
+    * drive based on effort
+    * @param effort -1  to 1
+    */
     void setEffort(float effort)
     {
         left.setEffort(effort);
@@ -99,10 +135,9 @@ public:
     }
 
     /**
- * drive based on effort
- * @param speed in degrees per second
- * 
- * */
+    * drive based on effort
+    * @param speed in degrees per second  
+    */
     void setSpeed(float speed)
     {
         left.setSpeed(speed);
@@ -110,20 +145,20 @@ public:
     }
 
     float lastEffort = 0;
+
     /**
- * @param button
- * 
- * */
-    void
-    setButton(uint16_t button)
+    * uses remote to control robot, numbers scale speed by .1, arrows turn 90 degrees
+    * @param button
+    */
+    void teleOp(uint16_t button)
     {
         if (button == remoteLeft)
         {
-            turn(-90, 270);
+            turn(-90, TURN_SPEED);
         }
         else if (button == remoteRight)
         {
-            turn(90, 270);
+            turn(90, TURN_SPEED);
         }
 
         switch (button)
@@ -181,12 +216,11 @@ public:
     }
 
     /**
- * Makes a shape
- * @param sides numbers of side for the shape
- * @param sideLength  the length of each side in inches
- * @param speed degrees per second to move while making shape
- * 
- * */
+    * Makes a shape
+    * @param sides numbers of side for the shape
+    * @param sideLength  the length of each side in inches
+    * @param speed degrees per second to move while making shape
+    */
     boolean makeShape(int sides, float sideLength, float speed)
     {
         float turnDegrees = 360 / sides;
@@ -199,14 +233,13 @@ public:
     }
 
     /**
- * makes a spiral shape in the shape of the side put in, ie 4 side for square spiral
- * 
- * @param baseLength the length of the first side in inches
- * @param speed, degrees per second to move
- * @param sides number of sides before completing on spiral
- * @param spiralAmount number of complete spirals to make
- * 
- * */
+    * makes a spiral shape in the shape of the side put in, ie 4 side for square spiral
+    * 
+    * @param baseLength the length of the first side in inches
+    * @param speed, degrees per second to move
+    * @param sides number of sides before completing on spiral
+    * @param spiralAmount number of complete spirals to make
+    */
     boolean makeSpiral(float baseLength, float speed, int sides, int spiralAmount)
     {
         float turnDegrees = 360 / sides;
@@ -218,13 +251,18 @@ public:
         return true;
     }
 
+    /**
+    * drives to a set distance away from a target using the ultra sonic
+    * @param inches distance to move to
+    * @param distance the ultrasonic getDistanceIN
+    */
     boolean driveToInches(float inches, float distanceIN)
     {
 
         float offset = distanceIN - inches;
-        float effort = offset * ultraProp;
+        float effort = offset * ULTRA_PROP;
 
-        if (distanceIN > inches - ultraDead && distanceIN < inches + ultraDead)
+        if (distanceIN > inches - ULTRA_DEAD && distanceIN < inches + ULTRA_DEAD)
         {
             setEffort(0);
             return true;
@@ -233,12 +271,21 @@ public:
         return false;
     }
 
+    //boolean to store whether the robot is turning
+    boolean isTurning = false;
+
+    /**
+     * follows the black line using p control
+     * @param error the currect difference between the two line sensors
+     * @param leftSense the current value of left Sensor
+     * @param the current value of the right sensor
+     */
     void followLine(float error, float leftSense, float rightSense)
     {
-        if (leftSense > lineSenseBlack && rightSense > lineSenseBlack /*&& error < lineFollowTurnDead*/)
+        if (leftSense > LINE_SENSE_BLACK && rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
         {
             isTurning = true;
-            if (turn(180, 360))
+            if (turn(180, TURN_SPEED))
             {
                 isTurning = false;
             }
@@ -246,36 +293,47 @@ public:
         else if (isTurning == false)
         {
 
-            left.setEffort(lineBaseSpeed + (error * lineProp));
-            right.setEffort(lineBaseSpeed - (error * lineProp));
+            left.setEffort(LINE_BASE_SPEED + (error * LINE_PROP));
+            right.setEffort(LINE_BASE_SPEED - (error * LINE_PROP));
         }
     }
 
+    //store bag start angle
     int bagStartAngle = 0;
+    //store bag end angle
     int bagEndAngle = 0;
+    //store the angle of the center of the bag
+    float bagCenter = 0;
+    //store how far the robot moved away from the line
+    float distFromLine = 0;
 
+    /**
+     * starting on the line, search for the bag, and drive to it prepared to pick it up
+     * @param distLast the ultrasonic distance before hiting the bag in inches
+     * @param curDist the ultrasonic get distance in inches
+     */
     boolean findBag(float distLast, float curDist)
     {
         switch (scanState)
         {
-        case INIT:
+        case INIT_SCAN:
             bagStartAngle = 0;
             bagEndAngle = 0;
 
-            if (turn(-45, 360))
+            if (turn(Turn_SET_UP_ANGLE, TURN_SPEED))
             {
                 scanState = SCANNING;
             }
             break;
         case SCANNING:
-            for (int i = 1; i <= 90; i++)
+            for (int i = 1; i <= SCAN_ANGLE; i++)
             {
-                turn(1, 270);
-                if (distLast > findBagDead && bagStartAngle == 0)
+                turn(1, SCAN_SPEED);
+                if (distLast > FIND_BAG_DEAD && bagStartAngle == 0)
                 {
                     bagStartAngle = i;
                 }
-                else if (distLast > findBagDead)
+                else if (distLast > FIND_BAG_DEAD)
                 {
                     bagEndAngle = i;
                 }
@@ -283,23 +341,61 @@ public:
             scanState = TURN_TO;
             break;
         case TURN_TO:
-            if (turn(-(bagEndAngle - bagStartAngle), 180))
+            bagCenter = bagEndAngle - bagStartAngle;
+            if (turn(-(bagCenter), TURN_SPEED))
             {
-                scanState = DRIVE;
+                distFromLine = curDist;
+                scanState = DRIVE_SCAN;
             }
             break;
-        case DRIVE:
-            if (driveToInches(5, curDist))
+        case DRIVE_SCAN:
+            if (driveToInches(DIST_FROM_BAG, curDist))
             {
-                scanState = DONE;
+                scanState = DONE_SCAN;
             }
             break;
 
-        case DONE:
+        case DONE_SCAN:
             bagStartAngle = 0;
             bagEndAngle = 0;
-
+            scanState = INIT_SCAN;
+            return true;
             break;
         }
+        return false;
+    }
+    /**
+     * returns from the free zone after picking up the bag
+     */
+    boolean returnFromFree()
+    {
+        switch (returnState)
+        {
+        case TURN_RETURN:
+            if (turn((-(Turn_SET_UP_ANGLE + SCAN_ANGLE - bagCenter)) - 90, TURN_SPEED))
+            {
+                returnState = DRIVE_RETURN;
+            }
+            break;
+        case DRIVE_RETURN:
+            if (driveInches(distFromLine, DRIVE_SPEED))
+            {
+                returnState = TURN_TWO;
+            }
+            break;
+        case TURN_TWO:
+            if (turn(-90, TURN_SPEED)) //face the drop area TODO find turn left or right
+            {
+                returnState = DONE_RETURN;
+            }
+            break;
+        case DONE_RETURN:
+            bagCenter = 0;
+            distFromLine = 0;
+            returnState = TURN_RETURN;
+            return true;
+            break;
+        }
+        return false;
     }
 };

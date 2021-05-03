@@ -5,24 +5,29 @@ class Ultrasonic
 {
 private:
     Rangefinder ultra;
-    float centiConversion = 2.54f;
-    float distanceFromLast = 0;
+
+    //conversion from cm to in
+    float CENTI_CONV = 2.54f;
 
 public:
-    float getDistanceCM()
-    {
-        return ultra.getDistanceCM();
-    }
-    float getDistanceIN()
-    {
-        return ultra.getDistanceCM() * (1 / centiConversion);
-    }
-
+    //attaches the ultrasonic, must call in main
     void attach()
     {
         ultra.attach(SIDE_ULTRASONIC_TRIG, SIDE_ULTRASONIC_ECHO);
     }
+    //returns the distance in centimeters
+    float getDistanceCM()
+    {
+        return ultra.getDistanceCM();
+    }
+    //returns the distanc in inches
+    float getDistanceIN()
+    {
+        return ultra.getDistanceCM() * (1 / CENTI_CONV);
+    }
 
+    float distanceFromLast = 0;
+    //gets the distance from the last time the ultrasonic was checked
     float distanceFromLastCheck()
     {
         int dist = fabs(distanceFromLast - getDistanceIN());

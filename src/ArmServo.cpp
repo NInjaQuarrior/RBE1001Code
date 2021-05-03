@@ -3,27 +3,45 @@
 class ArmServo
 {
 private:
-    int servoPin = 33;
-    int upPos = 0;
-    int downPos = 180;
-    int midPos = 70;
-
     Servo servo;
 
+    int servoPin = 33;
+
+    //arm in up pos
+    int upPos = 0;
+    //arm in down pos
+    int downPos = 180;
+    //arm parallel to ground
+    int midPos = 70;
+
 public:
+    /**
+ * attachs the servo, must be called in main class
+ */
     void attach()
     {
         servo.attach(servoPin);
     }
 
+    /**
+ * moves the arm to down to the ground
+ */
     void moveDownPosition()
     {
         servo.write(downPos);
     }
+
+    /**
+ * moves the arm to parrallel to the ground
+ */
     void moveMidPosition()
     {
         servo.write(upPos);
     }
+
+    /**
+ * moves the arm to up to the ground
+ */
     void moveUpPosition()
     {
         servo.write(downPos);
