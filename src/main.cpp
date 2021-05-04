@@ -61,7 +61,7 @@ boolean pickUpBagFree()
     }
     break;
   case TURN_AROUND:
-    if (drive.turn(190, 270))
+    if (drive.turn(180, 180))
     {
       freeZoneState = REVERSE;
     }
