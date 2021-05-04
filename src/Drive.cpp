@@ -405,15 +405,17 @@ public:
             if (counter <= SCAN_ANGLE)
             {
                 turn(1, SCAN_SPEED);
-                if (prevDist > curDist && bagStartAngle == 0 && (prevDist - curDist) > FIND_BAG_DEAD && curDist < MAX_DIST)
+                //if there is a sudden drop in distance greater than a deadband
+                if (bagStartAngle == 0 && prevDist > curDist && (prevDist - curDist) > FIND_BAG_DEAD && curDist < MAX_DIST)
                 {
 
                     prevDist = curDist;
-                    bagStartAngle = counter;
+                    bagStartAngle = counter;//store angle
                 }
+                //if there is a sudden rise in distance above a deadband 
                 else if (bagStartAngle != 0 && prevDist < curDist && (curDist - prevDist) > FIND_BAG_DEAD)
                 {
-                    bagEndAngle = counter;
+                    bagEndAngle = counter;//store angle
                     scanState = TURN_TO;
                 }
                 counter++;
@@ -421,6 +423,7 @@ public:
             break;
         case TURN_TO:
             bagCenter = bagEndAngle - bagStartAngle;
+            //-3 to be safe with turning
             if (turn(-(bagCenter / 2 - 3), 270))
             {
                 scanState = DRIVE_SCAN;
@@ -434,6 +437,7 @@ public:
             break;
 
         case DONE_SCAN:
+            //reset variables
             bagStartAngle = 0;
             bagEndAngle = 0;
             scanState = INIT_SCAN;
@@ -452,6 +456,7 @@ public:
         switch (returnState)
         {
         case TURN_RETURN:
+            //attempt to face perpendicular to the line
             if (turn((Turn_SET_UP_ANGLE + (bagCenter / 2)), 180))
             {
                 returnState = DRIVE_RETURN;
@@ -464,22 +469,21 @@ public:
             }
             break;
         case DRIVE_TO_LINE:
+            //center robot on the line
             if (driveInches(3, DRIVE_SPEED))
             {
                 returnState = TURN_TWO;
             }
             break;
         case TURN_TWO:
+            //reset robot on line
             if (alignToLine(1, leftSense, rightSense)) //face the drop area TODO find turn left or right
             {
                 returnState = DONE_RETURN;
             }
-            // if (turn(90, 270))
-            // {
-            //     returnState = DONE_RETURN;
-            // }
             break;
         case DONE_RETURN:
+            //reset variables
             bagCenter = 0;
             counter = 1;
             returnState = TURN_RETURN;
