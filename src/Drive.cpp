@@ -337,7 +337,7 @@ public:
     {
         if (direct < 0)
         {
-            if (rightSense > LINE_SENSE_BLACK - 1)
+            if (rightSense > LINE_SENSE_BLACK-1)
             {
                 left.setSpeed(0);
                 right.setSpeed(0);
@@ -346,7 +346,7 @@ public:
         }
         else if (direct >= 0)
         {
-            if (leftSense > LINE_SENSE_BLACK - 1)
+            if (leftSense > LINE_SENSE_BLACK-1)
             {
                 left.setSpeed(0);
                 right.setSpeed(0);
@@ -408,7 +408,7 @@ public:
             break;
         case TURN_TO:
             bagCenter = bagEndAngle - bagStartAngle;
-            if (turn(-(bagCenter / 2 - 7), 270))
+            if (turn(-(bagCenter / 2 -3), 270))
             {
                 scanState = DRIVE_SCAN;
             }
@@ -439,7 +439,7 @@ public:
         switch (returnState)
         {
         case TURN_RETURN:
-            if (turn(-(Turn_SET_UP_ANGLE + (bagCenter / 2)) - 280, 150))
+            if (turn((Turn_SET_UP_ANGLE + (bagCenter / 2)), 180))
             {
                 returnState = DRIVE_RETURN;
             }
