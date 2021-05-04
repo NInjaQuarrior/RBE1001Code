@@ -30,10 +30,10 @@ private:
     float LINE_BASE_SPEED = .2f;
 
     //Kp for following the line
-    float LINE_PROP = .08f;
+    float LINE_PROP = .1f;
 
     //voltage value for determining if a sensor is over the line
-    float LINE_SENSE_BLACK = 2.0f;
+    float LINE_SENSE_BLACK = 1.6f;
 
     //angle to turn before looking for object(bag)
     float Turn_SET_UP_ANGLE = 20.0f;
@@ -53,7 +53,8 @@ private:
     //speed to drive in degrees per second
     float DRIVE_SPEED = 270.0f;
 
-    float MAX_DIST = 40;
+    //max distance that the ultra will care about while scanning for a bag
+    float MAX_DIST = 30;
 
     //end constants=========================================
 
@@ -295,9 +296,6 @@ public:
         return false;
     }
 
-    //boolean to store whether the robot is turning
-    boolean isTurning = false;
-
     /**
      * follows the black line using p control
      * @param error the currect difference between the two line sensors
@@ -318,11 +316,26 @@ public:
      */
     boolean driveTillLine(float speed, float leftSense, float rightSense)
     {
-        if (leftSense > LINE_SENSE_BLACK && rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
+        if (leftSense > LINE_SENSE_BLACK || rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
         {
             return true;
         }
         setSpeed(speed);
+        return false;
+    }
+    /**
+     * line follow until find a t intersection
+     * @param speed the speed in degrees per second
+     * @param leftSense the current value of left Sensor
+     * @param rightSense current value of the right sensor
+     */
+    boolean lineFollowTillLine(float speed, float leftSense, float rightSense, float error)
+    {
+        if (leftSense > LINE_SENSE_BLACK || rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
+        {
+            return true;
+        }
+        followLine(error, leftSense, rightSense);
         return false;
     }
 
@@ -337,7 +350,7 @@ public:
     {
         if (direct < 0)
         {
-            if (rightSense > LINE_SENSE_BLACK-1)
+            if (rightSense > LINE_SENSE_BLACK - 1)
             {
                 left.setSpeed(0);
                 right.setSpeed(0);
@@ -346,7 +359,7 @@ public:
         }
         else if (direct >= 0)
         {
-            if (leftSense > LINE_SENSE_BLACK-1)
+            if (leftSense > LINE_SENSE_BLACK - 1)
             {
                 left.setSpeed(0);
                 right.setSpeed(0);
@@ -408,7 +421,7 @@ public:
             break;
         case TURN_TO:
             bagCenter = bagEndAngle - bagStartAngle;
-            if (turn(-(bagCenter / 2 -3), 270))
+            if (turn(-(bagCenter / 2 - 3), 270))
             {
                 scanState = DRIVE_SCAN;
             }
@@ -457,14 +470,14 @@ public:
             }
             break;
         case TURN_TWO:
-            // if (alignToLine(1, leftSense, rightSense)) //face the drop area TODO find turn left or right
-            // {
-            //     returnState = DONE_RETURN;
-            // }
-            if (turn(90, 270))
+            if (alignToLine(1, leftSense, rightSense)) //face the drop area TODO find turn left or right
             {
                 returnState = DONE_RETURN;
             }
+            // if (turn(90, 270))
+            // {
+            //     returnState = DONE_RETURN;
+            // }
             break;
         case DONE_RETURN:
             bagCenter = 0;

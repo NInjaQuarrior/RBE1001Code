@@ -43,6 +43,7 @@ void setup()
 
 void autonomous()
 {
+  //TODO
 }
 
 boolean pickUpBagFree()
@@ -61,13 +62,13 @@ boolean pickUpBagFree()
     }
     break;
   case TURN_AROUND:
-    if (drive.turn(180, 180))
+    if (drive.turn(190, 180))
     {
       freeZoneState = REVERSE;
     }
     break;
   case REVERSE:
-    if (drive.driveInches(-2, 270))
+    if (drive.driveInches(-2.5, 270))
     {
       freeZoneState = PICK_UP;
     }
@@ -90,14 +91,19 @@ boolean pickUpBagFree()
   return false;
 }
 
+//boolean used to only run a funtion once
 boolean doneThing = false;
 void loop()
 {
+
+  //code for controlling with remote =======================
   // Check for a key press on the remote
   int16_t keyPress = decoder.getKeyCode();
 
-  //Serial.printf("%f", ultra.getDistanceIN());
-  //Serial.println("");
+  //drive.teleOp(keyPress); // is commented out to not interfere with bag pick up
+  //========================================================
+
+  //code for picking up bag from free zone and returning==============
   if (doneThing == false)
   {
     if (pickUpBagFree())
@@ -109,10 +115,5 @@ void loop()
   {
     drive.followLine(lSensor.getDifference(), lSensor.getLeft(), lSensor.getRight());
   }
-  // If a valid key is pressed, print out its value
-  // if (keyPress >= 0)
-  // {
-  //   Serial.println("Key: " + String(keyPress));
-  //   drive.teleOp(keyPress);
-  // }
+  //================================================================
 }
