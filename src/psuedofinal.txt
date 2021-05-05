@@ -1,4 +1,6 @@
-if(bag is in free zone){
+1. drive foward until ultrasonic stop or hit line
+
+2. if(hit line){
     1. followLine until reach intersection;
     2. back up a few inches
     3.scan to the left for the bag
@@ -6,7 +8,7 @@ if(bag is in free zone){
     5.return to the line 
     6. resume line following heading towards the start zone
 }
-else{
+else if(ultrasonic stop){
      1. follow Line until reach intersection;
      2. drive towards bag until ultrasonic stop
      3. turn around
@@ -16,44 +18,66 @@ else{
      7. resume line following heading towards the start zone
 }
 
-7.if(reach first intersection){
-        continue following line straight
-    }
-8. if(reach second intersection){
+3.move to drop zone part 1
+  { 
+    1.reach first interesection
+    2. turn right 90
+    3. move to next intersection
+    4. turn left 90
+    5. move to next intersection
+  }
+
+4. move to drop zone part 2
       switch{dropzone}{
           case groundzone:
             1. turn left 90
             2.follow line until intersection
-            3.drop arm
+            3.follow line until next intersection
             4.reverse a few inches
             5.turn around 180
-            6.follow line until intersection
-            7.turn right
-            8.follow line until intersection
-            9. follow line straight a certain distance until in start zone
+            6. drop arm        
             break;
           case 1.5 inch zone:
-            1.follow line straight until ultrasonic stop
-            2. drive forward to get bag on platform
-            3.lower servo
-            4.reverse
-            5.turn around 180 
-            6.follow line until intersection
-            7.follow line straight until intersection
-            8. follow line straight a certain distance until in start zone
+             1. turn left 90
+            2.follow line until intersection
+            3. turn right 90
+            3.drive until ultrasonic stop
+            4. turn around 180
+            4.reverse a few inches
+            6. drop arm
             break;
           case 3 inch zone:
-            1.turn right 90
-            2.follow line until intersection
-            3.follow line straight until ultrasonic stop
-            4.drive forward to get bag on platform
-            5.lower servo
-            6.reverse
-            7.turn around 180 
-            8.follow line until intersection
-            9.turn right 90
-            10.follow line until intersection
-            11. follow line straight a certain distance until in start zone
+             1. turn right 90
+            3.drive until ultrasonic stop
+            4. turn around 180
+            4.reverse a few inches
+            6. drop arm
             break;
       }
- }
+ 
+5. return to start part 1 
+  switch{dropzone}{
+          case groundzone:
+            1. follow line for two intersection
+            2. turn right 90              
+            break;
+          case 1.5 inch zone:
+            1. follow line til intersection
+            2. turn left 90
+            3. follow line til intersection
+            4. turn right 90
+            break;
+          case 3 inch zone:
+             1. follow line til intersection
+             2. turn right 90
+            break;
+      }
+6. return to start part 2
+  {
+    1. follow line until intersection
+    2. turn right 90
+    3. follow line until intersection
+    4. turn left 90
+    5. drive forward a few inches
+  }
+  
