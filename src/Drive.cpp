@@ -59,8 +59,9 @@ private:
     //degrees per second to move in teleop
     float TELEOP_SPEED = 180;
 
-    //end constants=========================================
+    //end constants+++++++++++++++++++++++++++++++++++++++++++
 
+    //START enums for state machines ====================================
     //for scanning for object(bag)
     enum ScanState
     {
@@ -158,12 +159,44 @@ private:
 
     ReturnDropTwoState returnTwoState = INIT_DRIVE_TWO_R;
 
+    enum MoveToPrepState
+    {
+        INIT_DRIVE_P,
+        PREP_RIGHT_TURN_ONE,
+        RIGHT_TURN_P,
+        DRIVE_TO_SECOND_SECT,
+        SEC_DRIVE_P,
+        PREP_LEFT_TURN,
+        LEFT_TURN_ONE_P,
+        DRIVE_TO_THIRD_SECT
+    };
+
+    MoveToPrepState movePrepState = INIT_DRIVE_P;
+
+    enum MoveToStartState
+    {
+        INIT_DRIVE_S,
+        DRIVE_TO_SECT_1_S,
+        SEC_DRIVE_S,
+        PREP_RIGHT_TURN_S,
+        RIGHT_TURN_S,
+        DRIVE_TO_SECT_2_S,
+        TRD_DRIVE_S,
+        PREP_LEFT_TURN_S,
+        LEFT_TURN_S,
+
+    };
+
+    MoveToStartState moveStartState = INIT_DRIVE_S;
+
+    //END enums for state machines +++++++++++++++++++++++++++++++++++++++++++
+
+    //TODO remove usless methods from previous activities
 public:
     /**
     * turns a certain amount of degrees
     * @param degrees degrees to turn, negative to turn counter-clockwise
     * @param speed degrees per second to move
-    * 
     */
     boolean turn(float degrees, float speed)
     {
@@ -214,7 +247,6 @@ public:
     * drive straight a certain amount of inches
     * @param centi centimeters to move, negative to go backwars
     * @param speed degrees per second to move
-    * 
     */
     boolean driveCentimeters(float centi, float speed)
     {
@@ -246,13 +278,14 @@ public:
         right.setSpeed(speed);
     }
 
+    //to be deleted along with teleop
     float lastEffort = 0;
 
     /**
     * uses remote to control robot, numbers scale speed by .1, arrows turn 90 degrees
     * @param button
     */
-    void teleOp(uint16_t button)
+    void teleOp(uint16_t button) //TODO delete
     {
         if (button == remoteLeft)
         {
@@ -342,7 +375,7 @@ public:
     * @param sideLength  the length of each side in inches
     * @param speed degrees per second to move while making shape
     */
-    boolean makeShape(int sides, float sideLength, float speed)
+    boolean makeShape(int sides, float sideLength, float speed) //TODO delete
     {
         float turnDegrees = 360 / sides;
         for (int i = 0; i < sides; i++)
@@ -361,7 +394,7 @@ public:
     * @param sides number of sides before completing on spiral
     * @param spiralAmount number of complete spirals to make
     */
-    boolean makeSpiral(float baseLength, float speed, int sides, int spiralAmount)
+    boolean makeSpiral(float baseLength, float speed, int sides, int spiralAmount) //TODO delete
     {
         float turnDegrees = 360 / sides;
         for (int i = 0; i < (sides * spiralAmount); i++)
@@ -379,10 +412,6 @@ public:
     */
     boolean driveToInches(float inches, float curDist)
     {
-
-        //float offset = distanceIN - inches;
-        //float effort = offset * ULTRA_PROP; // for p control
-
         if (curDist > inches - ULTRA_DEAD && curDist < inches + ULTRA_DEAD)
         {
             setEffort(0);
@@ -499,11 +528,13 @@ public:
     /**
      * starting on the line, search for the bag, and drive to it prepared to pick it up
      * @param curDist the ultrasonic get distance in inches
+     * 
      */
     boolean findBag(float curDist)
     {
         switch (scanState)
         {
+        //set up for the scane
         case INIT_SCAN:
             bagStartAngle = 0;
             bagEndAngle = 0;
@@ -514,11 +545,13 @@ public:
                 scanState = SCANNING;
             }
             break;
+        //look for bag
         case SCANNING:
-
+            //for scan_angle look for bag
             if (counter <= SCAN_ANGLE)
             {
-                turn(1, SCAN_SPEED);
+                turn(1, SCAN_SPEED); //slowly now
+
                 //if there is a sudden drop in distance greater than a deadband
                 if (bagStartAngle == 0 && prevDist > curDist && (prevDist - curDist) > FIND_BAG_DEAD && curDist < MAX_DIST)
                 {
@@ -535,6 +568,7 @@ public:
                 counter++;
             }
             break;
+        //turn to center of bag
         case TURN_TO:
             bagCenter = bagEndAngle - bagStartAngle;
             //-3 to be safe with turning
@@ -543,13 +577,14 @@ public:
                 scanState = DRIVE_SCAN;
             }
             break;
+        //drive to bag
         case DRIVE_SCAN:
             if (driveToInches(DIST_FROM_BAG, curDist))
             {
                 scanState = DONE_SCAN;
             }
             break;
-
+        //hope you didnt miss cus everythings being reset
         case DONE_SCAN:
             //reset variables
             bagStartAngle = 0;
@@ -560,6 +595,7 @@ public:
         }
         return false;
     }
+
     /**
      * returns from the free zone after picking up the bag
      * @param leftSense left light sensor
@@ -606,20 +642,27 @@ public:
         }
         return false;
     }
-
+    //store if the robot is at the intersection closest to the three inch platform
     boolean isInPrepPos = false;
 
+    /**
+    * starting at the intersection closest to the start zone, go the the designated drop zone
+    * @param dropZone int associated with the drop zone. 0 ground, 1 1.5in, 2 3in
+    * @param leftSensor left light sensor value
+    * @param rightSensor right light sensor value
+    * @param error difference between right and left light sensor
+    * @param ultraDist current ultrasonic distance
+    * 
+    */
     boolean driveToDropZone(int dropZone, float leftSensor, float rightSensor, float error, float ultraDist)
     {
-        if (moveToPrepDropPos(leftSensor, rightSensor, error))
-        {
-            isInPrepPos = true;
-        }
 
+        //if in the right position
         if (isInPrepPos == true)
         {
             switch (dropZone)
             {
+            //drop zone 1
             case 0:
                 switch (dropZeroState)
                 {
@@ -656,6 +699,7 @@ public:
                 case DRIVE_TO_ZONE_ZERO:
                     if (lineFollowTillLine(leftSensor, rightSensor, error))
                     {
+                        //reset stuff
                         dropZeroState = INIT_DRIVE_ZERO;
                         isInPrepPos = false;
                         return true;
@@ -663,6 +707,7 @@ public:
                     break;
                 }
                 break;
+            //1.5in dropzone
             case 1:
                 switch (dropOneState)
                 {
@@ -711,6 +756,7 @@ public:
                 case DRIVE_TO_ZONE_ONE:
                     if (lineFollowToTargetDistance(leftSensor, rightSensor, error, ultraDist, 3))
                     {
+                        //reset stuff
                         dropOneState = INIT_DRIVE_ONE;
                         isInPrepPos = false;
                         return true;
@@ -719,6 +765,7 @@ public:
                 }
 
                 break;
+            // 3in dropzone
             case 2:
                 switch (dropTwoState)
                 {
@@ -750,21 +797,36 @@ public:
                     break;
                 }
                 break;
+            //if for some reason drop zone wasnt set put on ground level
             case -1:
                 dropZone = 0;
                 break;
             }
         }
+        //if not in correct position, go there
+        else if (moveToPrepDropPos(leftSensor, rightSensor, error))
+        {
+            isInPrepPos = true;
+        }
         return false;
     }
 
+    /**
+     * return to intersection closest to start zone
+     * @param dropZone int associated with the drop zone. 0 ground, 1 1.5in, 2 3in
+    * @param leftSensor left light sensor value
+    * @param rightSensor right light sensor value
+    * @param error difference between right and left light sensor
+     */
     boolean returnFromDropZone(int dropZone, float leftSensor, float rightSensor, float error)
     {
 
+        //if not in correct position go there
         if (isInPrepPos == false)
         {
             switch (dropZone)
             {
+                //at ground zone
             case 0:
                 switch (returnZeroState)
                 {
@@ -807,6 +869,7 @@ public:
                     break;
                 }
                 break;
+            //at 1.5in zone
             case 1:
                 switch (returnOneState)
                 {
@@ -861,6 +924,7 @@ public:
                     break;
                 }
                 break;
+            //at 3in zone
             case 2:
                 switch (returnTwoState)
                 {
@@ -896,6 +960,7 @@ public:
                 break;
             }
         }
+        //if in correct position, go to intersection closest to start
         else if (returnFromPrepDropPos(leftSensor, rightSensor, error) == true)
         {
             isInPrepPos = false;
@@ -905,23 +970,15 @@ public:
         return false;
     }
 
-    enum MoveToPrepState
-    {
-        INIT_DRIVE_P,
-        PREP_RIGHT_TURN_ONE,
-        RIGHT_TURN_P,
-        DRIVE_TO_SECOND_SECT,
-        SEC_DRIVE_P,
-        PREP_LEFT_TURN,
-        LEFT_TURN_ONE_P,
-        DRIVE_TO_THIRD_SECT
-    };
-
-    MoveToPrepState movePrepState = INIT_DRIVE_P;
-
+    /**
+     * When at intersection closest to start go to the intersection closest to 3in zone
+     * @param leftSensor left light sensor value
+    * @param rightSensor right light sensor value
+    * @param error difference between right and left light sensor
+     */
     boolean moveToPrepDropPos(float leftSense, float rightSense, float error)
     {
-
+        //it moves through various steps to go there
         switch (movePrepState)
         {
         case INIT_DRIVE_P:
@@ -978,24 +1035,16 @@ public:
         return false;
     }
 
-    enum MoveToStartState
-    {
-        INIT_DRIVE_S,
-        DRIVE_TO_SECT_1_S,
-        SEC_DRIVE_S,
-        PREP_RIGHT_TURN_S,
-        RIGHT_TURN_S,
-        DRIVE_TO_SECT_2_S,
-        TRD_DRIVE_S,
-        PREP_LEFT_TURN_S,
-        LEFT_TURN_S,
-
-    };
-
-    MoveToStartState moveStartState = INIT_DRIVE_S;
-
+    /**
+     * If at the intersection closest to 3in zone go to intersect closest to start
+     *  @param leftSensor left light sensor value
+    * @param rightSensor right light sensor value
+    * @param error difference between right and left light sensor
+     * 
+     */
     boolean returnFromPrepDropPos(float leftSense, float rightSense, float error)
     {
+        //it moves through various steps to go there
         switch (moveStartState)
         {
         case INIT_DRIVE_S:
