@@ -56,6 +56,9 @@ private:
     //max distance that the ultra will care about while scanning for a bag
     float MAX_DIST = 30;
 
+    //degrees per second to move in teleop
+    float TELEOP_SPEED = 180;
+
     //end constants=========================================
 
     //for scanning for object(bag)
@@ -80,6 +83,71 @@ private:
     };
 
     ReturnState returnState = TURN_RETURN;
+
+    enum DropZeroState
+    {
+        INIT_DRIVE_ZERO,
+        INIT_TURN_ZERO,
+        ALIGN_LINE_ZERO,
+        DRIVE_TO_ZONE_ZERO,
+        REVERSE_ZERO
+    };
+
+    DropZeroState dropZeroState = INIT_TURN_ZERO;
+
+    enum DropOneState
+    {
+        INIT_DRIVE_ONE,
+        DRIVE_TO_ZONE_ONE
+    };
+
+    DropOneState dropOneState = INIT_DRIVE_ONE;
+
+    enum DropTwoState
+    {
+        INIT_DRIVE_TWO,
+        INIT_TURN_TWO,
+        ALIGN_LINE_TWO,
+        DRIVE_TO_ZONE_TWO
+    };
+
+    DropTwoState dropTwoState = INIT_DRIVE_TWO;
+
+    enum ReturnDropZeroState
+    {
+        INIT_TURN_ZERO_R,
+        ALIGN_LINE_ZERO_R,
+        DRIVE_TO_SECT_ZERO_R,
+        CENTER_DRIVE_ZERO_R,
+        TURN_TO_ALIGN_ZERO_R,
+        ALIGN_ZERO_R
+
+    };
+
+    ReturnDropZeroState returnZeroState = INIT_TURN_ZERO_R;
+
+    enum ReturnDropOneState
+    {
+        INIT_TURN_ONE_R,
+        ALIGN_LINE_ONE_R,
+        DRIVE_TO_SECT_ONE_R,
+        CENTER_DRIVE_ONE_R,
+    };
+
+    ReturnDropOneState returnOneState = INIT_TURN_ONE_R;
+
+    enum ReturnDropTwoState
+    {
+        INIT_TURN_TWO_R,
+        ALIGN_LINE_TWO_R,
+        DRIVE_TO_SECT_TWO_R,
+        CENTER_DRIVE_TWO_R,
+        TURN_TO_ALIGN_TWO_R,
+        ALIGN_TWO_R
+
+    };
+
+    ReturnDropTwoState returnTwoState = INIT_TURN_TWO_R;
 
 public:
     /**
@@ -241,6 +309,25 @@ public:
     }
 
     /**
+    * uses remote to control robot, numbers scale speed by .1, arrows turn 90 degrees
+    * @param button
+    */
+    void teleOpAuto(uint16_t button)
+    {
+        if (button == remoteLeft)
+        {
+            turn(-45, TURN_SPEED);
+        }
+        else if (button == remoteRight)
+        {
+            turn(45, TURN_SPEED);
+        }
+
+        left.setSpeed(TELEOP_SPEED);
+        right.setSpeed(TELEOP_SPEED);
+    }
+
+    /**
     * Makes a shape
     * @param sides numbers of side for the shape
     * @param sideLength  the length of each side in inches
@@ -281,13 +368,13 @@ public:
     * @param inches distance to move to
     * @param distance the ultrasonic getDistanceIN
     */
-    boolean driveToInches(float inches, float distanceIN)
+    boolean driveToInches(float inches, float curDist)
     {
 
         //float offset = distanceIN - inches;
         //float effort = offset * ULTRA_PROP; // for p control
 
-        if (distanceIN > inches - ULTRA_DEAD && distanceIN < inches + ULTRA_DEAD)
+        if (curDist > inches - ULTRA_DEAD && curDist < inches + ULTRA_DEAD)
         {
             setEffort(0);
             return true;
@@ -329,9 +416,27 @@ public:
      * @param leftSense the current value of left Sensor
      * @param rightSense current value of the right sensor
      */
-    boolean lineFollowTillLine(float speed, float leftSense, float rightSense, float error)
+    boolean lineFollowTillLine(float leftSense, float rightSense, float error)
     {
         if (leftSense > LINE_SENSE_BLACK || rightSense > LINE_SENSE_BLACK /*&& error < lineFollowTurnDead*/)
+        {
+            return true;
+        }
+        followLine(error, leftSense, rightSense);
+        return false;
+    }
+
+    /**
+     * line follow until ultra reaches distance
+     * @param speed the speed in degrees per second
+     * @param leftSense the current value of left Sensor
+     * @param rightSense current value of the right sensor
+     * @param curDist
+     * @param targetDist
+     */
+    boolean lineFollowToTargetDistance(float leftSense, float rightSense, float error, float curDist, float targetDist)
+    {
+        if (curDist <= targetDist)
         {
             return true;
         }
@@ -410,12 +515,12 @@ public:
                 {
 
                     prevDist = curDist;
-                    bagStartAngle = counter;//store angle
+                    bagStartAngle = counter; //store angle
                 }
-                //if there is a sudden rise in distance above a deadband 
+                //if there is a sudden rise in distance above a deadband
                 else if (bagStartAngle != 0 && prevDist < curDist && (curDist - prevDist) > FIND_BAG_DEAD)
                 {
-                    bagEndAngle = counter;//store angle
+                    bagEndAngle = counter; //store angle
                     scanState = TURN_TO;
                 }
                 counter++;
@@ -477,7 +582,7 @@ public:
             break;
         case TURN_TWO:
             //reset robot on line
-            if (alignToLine(1, leftSense, rightSense)) //face the drop area TODO find turn left or right
+            if (alignToLine(1, leftSense, rightSense))
             {
                 returnState = DONE_RETURN;
             }
@@ -490,6 +595,232 @@ public:
             return true;
             break;
         }
+        return false;
+    }
+
+    boolean driveToDropZone(int dropZone, float leftSensor, float rightSensor, float error, float ultraDist)
+    {
+        switch (dropZone)
+        {
+        case 0:
+            switch (dropZeroState)
+            {
+            case INIT_DRIVE_ZERO:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    dropZeroState = INIT_TURN_ZERO;
+                }
+                break;
+            case INIT_TURN_ZERO:
+                if (turn(-45, TURN_SPEED))
+                {
+                    dropZeroState = ALIGN_LINE_ZERO;
+                }
+                break;
+            case ALIGN_LINE_ZERO:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    dropZeroState = DRIVE_TO_ZONE_ZERO;
+                }
+                break;
+            case DRIVE_TO_ZONE_ZERO:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    dropZeroState = INIT_DRIVE_ZERO;
+                    return true;
+                    //or
+                    // dropZeroState = REVERSE_ZERO;
+                }
+                break;
+            case REVERSE_ZERO: //TODO check if needed
+                if (driveInches(-2, DRIVE_SPEED))
+                {
+                    dropZeroState = INIT_DRIVE_ZERO;
+                    return true;
+                }
+                break;
+            }
+            break;
+        case 1:
+            switch (dropOneState)
+            {
+            case INIT_DRIVE_ONE:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    dropOneState = DRIVE_TO_ZONE_ONE;
+                }
+                break;
+            case DRIVE_TO_ZONE_ONE:
+                if (lineFollowToTargetDistance(leftSensor, rightSensor, error, ultraDist, 3)) //TODO tune 3 and make constant
+                {
+                    dropOneState = INIT_DRIVE_ONE;
+                    return true;
+                }
+                break;
+            }
+            break;
+        case 2:
+            switch (dropTwoState)
+            {
+            case INIT_DRIVE_TWO:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    dropTwoState = INIT_TURN_TWO;
+                }
+                break;
+            case INIT_TURN_TWO:
+                if (turn(45, TURN_SPEED))
+                {
+                    dropTwoState = ALIGN_LINE_TWO;
+                }
+                break;
+            case ALIGN_LINE_TWO:
+                if (alignToLine(1, leftSensor, rightSensor))
+                {
+                    dropTwoState = DRIVE_TO_ZONE_TWO;
+                }
+                break;
+            case DRIVE_TO_ZONE_TWO:
+                if (lineFollowToTargetDistance(leftSensor, rightSensor, error, ultraDist, 3)) //TODO tune 3 and make constant
+                {
+                    dropTwoState = INIT_DRIVE_TWO;
+                    return true;
+                }
+                break;
+            }
+            break;
+        case -1:
+            dropZone = 0;
+            break;
+        }
+        return false;
+    }
+
+
+    boolean returnFromDropZone(int dropZone, float leftSensor, float rightSensor, float error)
+    {
+        switch (dropZone)
+        {
+        case 0:
+            switch (returnZeroState)
+            {
+            case INIT_TURN_ZERO_R:
+                if (turn(-45, TURN_SPEED))
+                {
+                    returnZeroState = ALIGN_LINE_ZERO_R;
+                }
+                break;
+            case ALIGN_LINE_ZERO_R:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    returnZeroState = DRIVE_TO_SECT_ZERO_R;
+                }
+                break;
+            case DRIVE_TO_SECT_ZERO_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    returnZeroState = CENTER_DRIVE_ZERO_R;
+                }
+                break;
+            case CENTER_DRIVE_ZERO_R:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    returnZeroState = TURN_TO_ALIGN_ZERO_R;
+                }
+                break;
+            case TURN_TO_ALIGN_ZERO_R:
+                if (turn(45, TURN_SPEED))
+                {
+                    returnZeroState = ALIGN_ZERO_R;
+                }
+                break;
+            case ALIGN_ZERO_R:
+                if (alignToLine(1, leftSensor, rightSensor))
+                {
+                    returnZeroState = INIT_TURN_ZERO_R;
+                    return true;
+                }
+                break;
+            }
+            break;
+        case 1:
+            switch (returnOneState)
+            {
+            case INIT_TURN_ONE_R:
+                if (turn(-45, TURN_SPEED))
+                {
+                    returnOneState = ALIGN_LINE_ONE_R;
+                }
+                break;
+            case ALIGN_LINE_ONE_R:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    returnOneState = DRIVE_TO_SECT_ONE_R;
+                }
+                break;
+            case DRIVE_TO_SECT_ONE_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    returnOneState = CENTER_DRIVE_ONE_R;
+                }
+                break;
+            case CENTER_DRIVE_ONE_R:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    returnOneState = INIT_TURN_ONE_R;
+                    return true;
+                }
+                break;
+            }
+
+            break;
+        case 2:
+            switch (returnTwoState)
+            {
+            case INIT_TURN_TWO_R:
+                if (turn(-45, TURN_SPEED))
+                {
+                    returnTwoState = ALIGN_LINE_TWO_R;
+                }
+                break;
+            case ALIGN_LINE_TWO_R:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    returnTwoState = DRIVE_TO_SECT_TWO_R;
+                }
+                break;
+            case DRIVE_TO_SECT_TWO_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    returnTwoState = CENTER_DRIVE_TWO_R;
+                }
+                break;
+            case CENTER_DRIVE_TWO_R:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    returnTwoState = TURN_TO_ALIGN_TWO_R;
+                }
+                break;
+            case TURN_TO_ALIGN_TWO_R:
+                if (turn(-45, TURN_SPEED))
+                {
+                    returnTwoState = ALIGN_TWO_R;
+                }
+                break;
+            case ALIGN_TWO_R:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    returnTwoState = INIT_TURN_TWO_R;
+                    return true;
+                }
+                break;
+            }
+            break;
+        case -1:
+            dropZone = 0;
+            break;
+        }
+
         return false;
     }
 };
