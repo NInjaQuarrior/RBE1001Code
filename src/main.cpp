@@ -48,11 +48,9 @@ enum AutoState
   CHOOSE_BAG,
   PICKUP_BAG,
   DRIVE_TO_FIRST_SECT,
-  MOVE_TO_PREP_DROP,
   DRIVE_TO_DROP_WITH_BAG,
   DROP_OFF_BAG,
   RETURN_FROM_DROP,
-  RETURN_TO_START,
   GET_IN_START_ZONE,
   DONE_AUTO
 };
@@ -107,8 +105,6 @@ boolean pickUpBag()
 
 boolean dropOffBag()
 {
-  //TODO maybe go mid position for platforms, if so need switch taking in the dropzon and setting to mid if plat 1 or 2
-
   servo.moveDownPosition();
   if (drive.driveInches(-3, 180))
   {
@@ -266,41 +262,10 @@ void autonomous()
     case DRIVE_TO_FIRST_SECT:
       if (drive.lineFollowTillLine(lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
       {
-        drive.driveInches(1, 270);
-        //autoState = MOVE_TO_PREP_DROP;
+
+        autoState = DRIVE_TO_DROP_WITH_BAG;
       }
       break;
-    case MOVE_TO_PREP_DROP:
-
-      // PREP_RIGHT_TURN_ONE,
-      //     RIGHT_TURN_ONE,
-      //     DRIVE_TO_SECOND_SECT,
-      //     PREP_LEFT_TURN_ONE,
-      //     LEFT_TURN_ONE,
-      //     DRIVE_TO_THIRD_SECT,
-      //     switch ()
-      // {
-      // case PREP_RIGHT_TURN_ONE:
-      //   break;
-      // case RIGHT_TURN_ONE:
-      //   break;
-      // case DRIVE_TO_SECOND_SECT:
-      //   break;
-      // case PREP_LEFT_TURN_ONE:
-      // case LEFT_TURN_ONE:
-      //   break;
-
-      // case DRIVE_TO_THIRD_SECT:
-      //   if (drive.lineFollowTillLine(lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
-      //   {
-      //     autoState = DRIVE_TO_DROP_WITH_BAG;
-      //   }
-      //   break;
-      // }
-
-      break;
-
-      //TODO adjust from new start point
     case DRIVE_TO_DROP_WITH_BAG:
       if (drive.driveToDropZone(dropZone, lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference(), ultra.getDistanceIN()))
       {
@@ -314,19 +279,10 @@ void autonomous()
       }
       break;
     case RETURN_FROM_DROP:
-      //TODO fix to return to new start
       if (drive.returnFromDropZone(dropZone, lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
-      {
-        autoState = RETURN_TO_START;
-      }
-      break;
-    case RETURN_TO_START:
-      //new switch return to first sect
-      if (drive.lineFollowTillLine(lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
       {
         autoState = GET_IN_START_ZONE;
       }
-
       break;
     case GET_IN_START_ZONE:
       if (drive.driveInches(7, 270))
