@@ -63,7 +63,8 @@ private:
 
     //START enums for state machines ====================================
     //for scanning for object(bag)
-    const enum ScanState {
+    enum ScanState
+    {
         INIT_SCAN,
         SCANNING,
         TURN_TO,
@@ -74,7 +75,8 @@ private:
     ScanState scanState = INIT_SCAN;
 
     //for returning to line from picking up bag from free zone
-    const enum ReturnStateFree {
+    enum ReturnStateFree
+    {
         TURN_RETURN,
         TURN_TWO,
         DRIVE_RETURN,
@@ -84,7 +86,8 @@ private:
 
     ReturnStateFree returnState = TURN_RETURN;
 
-    const enum DropZeroState {
+    enum DropZeroState
+    {
         INIT_DRIVE_ZERO,
         INIT_TURN_ZERO,
         ALIGN_LINE_ZERO,
@@ -96,7 +99,8 @@ private:
 
     DropZeroState dropZeroState = INIT_TURN_ZERO;
 
-    const enum DropOneState {
+    enum DropOneState
+    {
         INIT_DRIVE_ONE,
         INIT_TURN_ONE,
         ALIGN_LINE_ONE,
@@ -109,7 +113,8 @@ private:
 
     DropOneState dropOneState = INIT_DRIVE_ONE;
 
-    const enum DropTwoState {
+    enum DropTwoState
+    {
         INIT_DRIVE_TWO,
         INIT_TURN_TWO,
         ALIGN_LINE_TWO,
@@ -118,7 +123,8 @@ private:
 
     DropTwoState dropTwoState = INIT_DRIVE_TWO;
 
-    const enum ReturnDropZeroState {
+    enum ReturnDropZeroState
+    {
         INIT_DRIVE_ZERO_R,
         PREP_NEXT_DRIVE_ZERO_R,
         DRIVE_SEC_ZERO_R,
@@ -130,7 +136,8 @@ private:
 
     ReturnDropZeroState returnZeroState = INIT_DRIVE_ZERO_R;
 
-    const enum ReturnDropOneState {
+    enum ReturnDropOneState
+    {
         INIT_DRIVE_ONE_R,
         PREP_MOVE_LEFT_ONE_R,
         PREP_TURN_LEFT_ONE_R,
@@ -143,7 +150,8 @@ private:
 
     ReturnDropOneState returnOneState = INIT_DRIVE_ONE_R;
 
-    const enum ReturnDropTwoState {
+    enum ReturnDropTwoState
+    {
         INIT_DRIVE_TWO_R,
         PREP_MOVE_TURN_TWO_R,
         PREP_TURN_TWO_R,
@@ -152,7 +160,8 @@ private:
 
     ReturnDropTwoState returnTwoState = INIT_DRIVE_TWO_R;
 
-    const enum MoveToPrepState {
+    enum MoveToPrepState
+    {
         INIT_DRIVE_P,
         PREP_RIGHT_TURN_ONE,
         RIGHT_TURN_P,
@@ -165,7 +174,8 @@ private:
 
     MoveToPrepState movePrepState = INIT_DRIVE_P;
 
-    const enum MoveToStartState {
+    enum MoveToStartState
+    {
         INIT_DRIVE_S,
         DRIVE_TO_SECT_1_S,
         SEC_DRIVE_S,

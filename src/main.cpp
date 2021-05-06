@@ -24,7 +24,8 @@ const float BAG_PRESENT_DEAD = 10; //TODO tune
 const uint8_t IR_DETECTOR_PIN = 15;
 IRDecoder decoder(15);
 
-const enum FreeZoneState {
+enum FreeZoneState
+{
   INIT,
   INIT_TURN_AROUND_ONE,
   TURN_AROUND_ONE,
@@ -39,7 +40,8 @@ const enum FreeZoneState {
 
 FreeZoneState freeZoneState = INIT;
 
-const enum AutoState {
+enum AutoState
+{
   INIT_AUTO,
   WAIT_TO_START,
   DRIVE_TO_PICKUP,
@@ -55,7 +57,8 @@ const enum AutoState {
 
 AutoState autoState = INIT_AUTO;
 
-const enum PickUpBagState {
+enum PickUpBagState
+{
   DRIVE_TO_BAG,
   TURN_AROUND_PICKUP,
   REVERSE_PICKUP,
