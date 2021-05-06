@@ -5,14 +5,14 @@ class ArmServo
 private:
     Servo servo;
 
-    int servoPin = 33;
+    const int servoPin = 33;
 
     //arm in up pos
-    int upPos = 180;
+    const int upPos = 180;
     //arm in down pos
-    int downPos = 0;
+    const int downPos = 0;
     //arm parallel to ground
-    int midPos = 70;
+    const int midPos = 70;
 
 public:
     /**

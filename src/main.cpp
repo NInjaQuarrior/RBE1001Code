@@ -19,13 +19,12 @@ LineSense lSensor;
 //ArmServo class obkect
 ArmServo servo;
 
-float BAG_PRESENT_DEAD = 10;
+const float BAG_PRESENT_DEAD = 10;
 
 const uint8_t IR_DETECTOR_PIN = 15;
 IRDecoder decoder(15);
 
-enum FreeZoneState
-{
+const enum FreeZoneState {
   INIT,
   INIT_TURN_AROUND_ONE,
   TURN_AROUND_ONE,
@@ -40,8 +39,7 @@ enum FreeZoneState
 
 FreeZoneState freeZoneState = INIT;
 
-enum AutoState
-{
+const enum AutoState {
   INIT_AUTO,
   WAIT_TO_START,
   DRIVE_TO_PICKUP,
@@ -59,8 +57,7 @@ enum AutoState
 
 AutoState autoState = INIT_AUTO;
 
-enum PickUpBagState
-{
+const enum PickUpBagState {
   DRIVE_TO_BAG,
   TURN_AROUND_PICKUP,
   RETURN_TO_LINE_PICKUP

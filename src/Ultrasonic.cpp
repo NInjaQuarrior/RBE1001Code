@@ -7,7 +7,7 @@ private:
     Rangefinder ultra;
 
     //conversion from cm to in
-    float CENTI_CONV = 2.54f;
+    const float CENTI_CONV = 2.54f;
 
 public:
     //attaches the ultrasonic, must call in main

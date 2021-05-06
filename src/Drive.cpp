@@ -9,72 +9,71 @@ private:
     RightMotor right;
 
     //constantss ======================================
-    float WHEEL_DIAMETER = 2.75f;
+    const float WHEEL_DIAMETER = 2.75f;
 
     //centi to inch conversion
-    float CENTI_CONV = 2.54f;
+    const float CENTI_CONV = 2.54f;
 
     //Kp for the ultra moving
-    float ULTRA_PROP = .07f;
+    const float ULTRA_PROP = .07f;
 
     //deadband for moving to a distance with ultra
-    float ULTRA_DEAD = .35f;
+    const float ULTRA_DEAD = .35f;
 
     //speed while using ultra
-    float ULTRA_DRIVE = 90;
+    const float ULTRA_DRIVE = 90;
 
     //deadband for finding an object(bag) with thge ultra
-    float FIND_BAG_DEAD = 5;
+    const float FIND_BAG_DEAD = 5;
 
     //base follow line speed
-    float LINE_BASE_SPEED = .2f;
+    const float LINE_BASE_SPEED = .2f;
 
     //Kp for following the line
-    float LINE_PROP = .1f;
+    const float LINE_PROP = .1f;
 
     //voltage value for determining if a sensor is over the line
-    float LINE_SENSE_BLACK = 1.6f;
+    const float LINE_SENSE_BLACK = 1.6f;
 
     //angle to turn before looking for object(bag)
-    float Turn_SET_UP_ANGLE = 20.0f;
+    const float Turn_SET_UP_ANGLE = 20.0f;
 
     //turn speed in degrees per second
-    float TURN_SPEED = 270.0f;
+    const float TURN_SPEED = 270.0f;
 
     //angle to scan while looking for object
-    float SCAN_ANGLE = 150.0f;
+    const float SCAN_ANGLE = 150.0f;
 
     //speed to turn while scanning for object in degrees per second
-    float SCAN_SPEED = 270.0f;
+    const float SCAN_SPEED = 270.0f;
 
     //distance to stop away from bag to pick it up
-    float DIST_FROM_BAG = 2.5f; //TODO tune
+    const float DIST_FROM_BAG = 2.5f; //TODO tune
 
     //speed to drive in degrees per second
-    float DRIVE_SPEED = 270.0f;
+    const float DRIVE_SPEED = 270.0f;
 
     //max distance that the ultra will care about while scanning for a bag
-    float MAX_DIST = 30;
+    const float MAX_DIST = 30;
 
     //degrees per second to move in teleop
-    float TELEOP_SPEED = 180;
+    const float TELEOP_SPEED = 180;
 
     //end constants=========================================
 
     //for scanning for object(bag)
-    enum ScanState
-    {
+    const enum ScanState {
         INIT_SCAN,
         SCANNING,
         TURN_TO,
         DRIVE_SCAN,
         DONE_SCAN
     };
+
     ScanState scanState = INIT_SCAN;
 
     //for returning to line from picking up bag from free zone
-    enum ReturnState
-    {
+    const enum ReturnState {
         TURN_RETURN,
         TURN_TWO,
         DRIVE_RETURN,
@@ -84,8 +83,7 @@ private:
 
     ReturnState returnState = TURN_RETURN;
 
-    enum DropZeroState
-    {
+    const enum DropZeroState {
         INIT_DRIVE_ZERO,
         INIT_TURN_ZERO,
         ALIGN_LINE_ZERO,
@@ -95,16 +93,14 @@ private:
 
     DropZeroState dropZeroState = INIT_TURN_ZERO;
 
-    enum DropOneState
-    {
+    const enum DropOneState {
         INIT_DRIVE_ONE,
         DRIVE_TO_ZONE_ONE
     };
 
     DropOneState dropOneState = INIT_DRIVE_ONE;
 
-    enum DropTwoState
-    {
+    const enum DropTwoState {
         INIT_DRIVE_TWO,
         INIT_TURN_TWO,
         ALIGN_LINE_TWO,
@@ -113,8 +109,7 @@ private:
 
     DropTwoState dropTwoState = INIT_DRIVE_TWO;
 
-    enum ReturnDropZeroState
-    {
+    const enum ReturnDropZeroState {
         INIT_TURN_ZERO_R,
         ALIGN_LINE_ZERO_R,
         DRIVE_TO_SECT_ZERO_R,
@@ -126,8 +121,7 @@ private:
 
     ReturnDropZeroState returnZeroState = INIT_TURN_ZERO_R;
 
-    enum ReturnDropOneState
-    {
+    const enum ReturnDropOneState {
         INIT_TURN_ONE_R,
         ALIGN_LINE_ONE_R,
         DRIVE_TO_SECT_ONE_R,
@@ -136,8 +130,7 @@ private:
 
     ReturnDropOneState returnOneState = INIT_TURN_ONE_R;
 
-    enum ReturnDropTwoState
-    {
+    const enum ReturnDropTwoState {
         INIT_TURN_TWO_R,
         ALIGN_LINE_TWO_R,
         DRIVE_TO_SECT_TWO_R,
@@ -695,7 +688,6 @@ public:
         }
         return false;
     }
-
 
     boolean returnFromDropZone(int dropZone, float leftSensor, float rightSensor, float error)
     {

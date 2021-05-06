@@ -8,9 +8,9 @@ private:
 
     ESP32AnalogRead rightSensor;
 
-    int leftPort = 36;
+    const int leftPort = 36;
 
-    int rightPort = 39;
+    const int rightPort = 39;
 
 public:
     /**
