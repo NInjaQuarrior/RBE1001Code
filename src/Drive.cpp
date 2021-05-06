@@ -74,8 +74,7 @@ private:
     ScanState scanState = INIT_SCAN;
 
     //for returning to line from picking up bag from free zone
-    enum ReturnStateFree
-    {
+    const enum ReturnStateFree {
         TURN_RETURN,
         TURN_TWO,
         DRIVE_RETURN,
@@ -119,8 +118,7 @@ private:
 
     DropTwoState dropTwoState = INIT_DRIVE_TWO;
 
-    enum ReturnDropZeroState
-    {
+    const enum ReturnDropZeroState {
         INIT_DRIVE_ZERO_R,
         PREP_NEXT_DRIVE_ZERO_R,
         DRIVE_SEC_ZERO_R,
@@ -132,8 +130,7 @@ private:
 
     ReturnDropZeroState returnZeroState = INIT_DRIVE_ZERO_R;
 
-    enum ReturnDropOneState
-    {
+    const enum ReturnDropOneState {
         INIT_DRIVE_ONE_R,
         PREP_MOVE_LEFT_ONE_R,
         PREP_TURN_LEFT_ONE_R,
@@ -146,8 +143,7 @@ private:
 
     ReturnDropOneState returnOneState = INIT_DRIVE_ONE_R;
 
-    enum ReturnDropTwoState
-    {
+    const enum ReturnDropTwoState {
         INIT_DRIVE_TWO_R,
         PREP_MOVE_TURN_TWO_R,
         PREP_TURN_TWO_R,
@@ -156,8 +152,7 @@ private:
 
     ReturnDropTwoState returnTwoState = INIT_DRIVE_TWO_R;
 
-    enum MoveToPrepState
-    {
+    const enum MoveToPrepState {
         INIT_DRIVE_P,
         PREP_RIGHT_TURN_ONE,
         RIGHT_TURN_P,
@@ -170,8 +165,7 @@ private:
 
     MoveToPrepState movePrepState = INIT_DRIVE_P;
 
-    enum MoveToStartState
-    {
+    const enum MoveToStartState {
         INIT_DRIVE_S,
         DRIVE_TO_SECT_1_S,
         SEC_DRIVE_S,

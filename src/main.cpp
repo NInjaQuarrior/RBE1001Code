@@ -19,7 +19,7 @@ LineSense lSensor;
 //ArmServo class obkect
 ArmServo servo;
 //deadband for if bag in pickup zone
-float BAG_PRESENT_DEAD = 10; //TODO tune
+const float BAG_PRESENT_DEAD = 10; //TODO tune
 
 const uint8_t IR_DETECTOR_PIN = 15;
 IRDecoder decoder(15);
