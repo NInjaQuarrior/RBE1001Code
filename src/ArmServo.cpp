@@ -12,7 +12,7 @@ private:
     //arm in down pos
     const int downPos = 0;
     //arm parallel to ground
-    const int midPos = 70;
+    const int midPos = 65;
 
 public:
     /**

@@ -33,10 +33,10 @@ private:
     const float LINE_PROP = .09f;
 
     //voltage value for determining if a sensor is over the line
-    const float LINE_SENSE_BLACK = 1.6f;
+    const float LINE_SENSE_BLACK = 1.4f;
 
     //angle to turn before looking for object(bag)
-    const float Turn_SET_UP_ANGLE = 20.0f;
+    const float Turn_SET_UP_ANGLE = 30.0f;
 
     //turn speed in degrees per second
     const float TURN_SPEED = 180.0f;
@@ -48,7 +48,7 @@ private:
     const float SCAN_SPEED = 270.0f;
 
     //distance to stop away from bag to pick it up
-    const float DIST_FROM_BAG = 4.0f; //TODO tune
+    const float DIST_FROM_BAG = 5.0f; //TODO tune
 
     //speed to drive in degrees per second
     const float DRIVE_SPEED = 210.0f;
@@ -678,7 +678,7 @@ public:
                     }
                     break;
                 case INIT_TURN_ZERO:
-                    if (turn(-45, 150))
+                    if (turn(-45, 100))
                     {
                         dropZeroState = ALIGN_LINE_ZERO;
                     }
@@ -730,7 +730,7 @@ public:
                     }
                     break;
                 case INIT_TURN_ONE:
-                    if (turn(-45, 150))
+                    if (turn(-45, 100))
                     {
                         dropOneState = ALIGN_LINE_ONE;
                     }
@@ -754,7 +754,7 @@ public:
                     }
                     break;
                 case PREP_TURN_ONE:
-                    if (turn(45, 150))
+                    if (turn(45, 100))
                     {
                         dropOneState = TURN_ONE;
                     }
@@ -794,7 +794,7 @@ public:
                     }
                     break;
                 case INIT_TURN_TWO:
-                    if (turn(45, 150))
+                    if (turn(45, 100))
                     {
                         dropTwoState = ALIGN_LINE_TWO;
                     }
@@ -806,7 +806,7 @@ public:
                     }
                     break;
                 case DRIVE_TO_ZONE_TWO:
-                    if (lineFollowToTargetDistance(leftSensor, rightSensor, error, ultraDist, 3)) //TODO tune 3 and make constant
+                    if (lineFollowToTargetDistance(leftSensor, rightSensor, error, ultraDist, 4.5)) //TODO tune 3 and make constant
                     {
                         dropTwoState = INIT_DRIVE_TWO;
                         isInPrepPos = false;
@@ -840,172 +840,160 @@ public:
     {
 
         //if not in correct position go there
-        if (isInPrepPos == false)
+        switch (dropZone)
         {
-            switch (dropZone)
+            //at ground zone
+        case 0:
+            switch (returnZeroState)
             {
-                //at ground zone
-            case 0:
-                switch (returnZeroState)
-                {
-                case INIT_DRIVE_ZERO_R:
-                    if (lineFollowTillLine(leftSensor, rightSensor, error))
-                    {
-                        returnZeroState = PREP_NEXT_DRIVE_ZERO_R;
-                    }
-                    break;
-                case PREP_NEXT_DRIVE_ZERO_R:
-                    if (driveInches(3, DRIVE_SPEED))
-                    {
-                        returnZeroState = PREP_TURN_ZERO_R;
-                    }
-                    break;
-                // case DRIVE_SEC_ZERO_R:
-                //     if (lineFollowTillLine(leftSensor, rightSensor, error))
-                //     {
-                //         returnZeroState = PREP_MOVE_TURN_ZERO_R;
-                //     }
-                //     break;
-                // case PREP_MOVE_TURN_ZERO_R:
-                //     if (driveInches(3, DRIVE_SPEED))
-                //     {
-                //         returnZeroState = PREP_TURN_ZERO_R;
-                //     }
-                //     break;
-                case PREP_TURN_ZERO_R:
-                    if (turn(45, TURN_SPEED))
-                    {
-                        returnZeroState = ALIGN_LINE_ZERO_R;
-                    }
-                    break;
-                case ALIGN_LINE_ZERO_R:
-                    if (alignToLine(1, leftSensor, rightSensor))
-                    {
-                        returnZeroState = FINAL_TO_START_ZERO_R;
-                        //isInPrepPos = true;
-                    }
-                    break;
-                case FINAL_TO_START_ZERO_R:
-                    if (lineFollowTillLine(leftSensor, rightSensor, error))
-                    {
-                        return true;
-                        returnZeroState = INIT_DRIVE_ZERO_R;
-                    }
-                    break;
-                }
-                break;
-            //at 1.5in zone
-            case 1:
-
+            case INIT_DRIVE_ZERO_R:
                 if (lineFollowTillLine(leftSensor, rightSensor, error))
                 {
-                    isInPrepPos = true;
+                    returnZeroState = PREP_NEXT_DRIVE_ZERO_R;
+                }
+                break;
+            case PREP_NEXT_DRIVE_ZERO_R:
+                if (driveInches(3, DRIVE_SPEED))
+                {
+                    returnZeroState = PREP_TURN_ZERO_R;
+                }
+                break;
+            // case DRIVE_SEC_ZERO_R:
+            //     if (lineFollowTillLine(leftSensor, rightSensor, error))
+            //     {
+            //         returnZeroState = PREP_MOVE_TURN_ZERO_R;
+            //     }
+            //     break;
+            // case PREP_MOVE_TURN_ZERO_R:
+            //     if (driveInches(3, DRIVE_SPEED))
+            //     {
+            //         returnZeroState = PREP_TURN_ZERO_R;
+            //     }
+            //     break;
+            case PREP_TURN_ZERO_R:
+                if (turn(45, TURN_SPEED))
+                {
+                    returnZeroState = ALIGN_LINE_ZERO_R;
+                }
+                break;
+            case ALIGN_LINE_ZERO_R:
+                if (alignToLine(1, leftSensor, rightSensor))
+                {
+                    returnZeroState = FINAL_TO_START_ZERO_R;
+                }
+                break;
+            case FINAL_TO_START_ZERO_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    returnZeroState = INIT_DRIVE_ZERO_R;
                     return true;
                 }
                 break;
-                // switch (returnOneState)
-                // {
-                // case INIT_DRIVE_ONE_R:
-                //     //TODO
-                //     // if (lineFollowTillLine(leftSensor, rightSensor, error))
-                //     // {
-                //     returnOneState = PREP_TURN_LEFT_ONE_R;
-                //     //}
-                //     break;
-                // case PREP_MOVE_LEFT_ONE_R:
-                //     if (driveInches(3, DRIVE_SPEED))
-                //     {
-                //         returnOneState = PREP_TURN_LEFT_ONE_R;
-                //     }
-                //     break;
-                // case PREP_TURN_LEFT_ONE_R:
-                //     if (turn(-45, TURN_SPEED))
-                //     {
-                //         returnOneState = TURN_LEFT_ONE_R;
-                //     }
-                //     break;
-                // case TURN_LEFT_ONE_R:
-                //     if (alignToLine(-1, leftSensor, rightSensor))
-                //     {
-                //         returnOneState = DRIVE_SEC_ONE_R;
-                //     }
-                //     break;
-                // case DRIVE_SEC_ONE_R:
-                //     if (lineFollowTillLine(leftSensor, rightSensor, error))
-                //     {
-                //         returnOneState = PREP_TURN_LEFT_ONE_R;
-                //     }
-                //     break;
-                // case REP_MOVE_TURN_ONE_R:
-                //     if (driveInches(3, DRIVE_SPEED))
-                //     {
-                //         returnOneState = PREP_TURN_ONE_R;
-                //     }
-                //     break;
-                // case PREP_TURN_ONE_R:
-                //     if (turn(45, TURN_SPEED))
-                //     {
-                //         returnOneState = ALIGN_LINE_ONE_R;
-                //     }
-                //     break;
-                // case ALIGN_LINE_ONE_R:
-                //     if (alignToLine(1, leftSensor, rightSensor))
-                //     {
-                //         returnOneState = INIT_DRIVE_ONE_R;
-                //         isInPrepPos = true;
-                //
-                //     }
-                //     break;
-                // }
-                break;
-            //at 3in zone
-            case 2:
-                switch (returnTwoState)
+            }
+            break;
+        //at 1.5in zone
+        case 1:
+
+            if (lineFollowTillLine(leftSensor, rightSensor, error))
+            {
+                return true;
+            }
+            break;
+            // switch (returnOneState)
+            // {
+            // case INIT_DRIVE_ONE_R:
+            //     //TODO
+            //     // if (lineFollowTillLine(leftSensor, rightSensor, error))
+            //     // {
+            //     returnOneState = PREP_TURN_LEFT_ONE_R;
+            //     //}
+            //     break;
+            // case PREP_MOVE_LEFT_ONE_R:
+            //     if (driveInches(3, DRIVE_SPEED))
+            //     {
+            //         returnOneState = PREP_TURN_LEFT_ONE_R;
+            //     }
+            //     break;
+            // case PREP_TURN_LEFT_ONE_R:
+            //     if (turn(-45, TURN_SPEED))
+            //     {
+            //         returnOneState = TURN_LEFT_ONE_R;
+            //     }
+            //     break;
+            // case TURN_LEFT_ONE_R:
+            //     if (alignToLine(-1, leftSensor, rightSensor))
+            //     {
+            //         returnOneState = DRIVE_SEC_ONE_R;
+            //     }
+            //     break;
+            // case DRIVE_SEC_ONE_R:
+            //     if (lineFollowTillLine(leftSensor, rightSensor, error))
+            //     {
+            //         returnOneState = PREP_TURN_LEFT_ONE_R;
+            //     }
+            //     break;
+            // case REP_MOVE_TURN_ONE_R:
+            //     if (driveInches(3, DRIVE_SPEED))
+            //     {
+            //         returnOneState = PREP_TURN_ONE_R;
+            //     }
+            //     break;
+            // case PREP_TURN_ONE_R:
+            //     if (turn(45, TURN_SPEED))
+            //     {
+            //         returnOneState = ALIGN_LINE_ONE_R;
+            //     }
+            //     break;
+            // case ALIGN_LINE_ONE_R:
+            //     if (alignToLine(1, leftSensor, rightSensor))
+            //     {
+            //         returnOneState = INIT_DRIVE_ONE_R;
+            //         isInPrepPos = true;
+            //
+            //     }
+            //     break;
+            // }
+            break;
+        //at 3in zone
+        case 2:
+            switch (returnTwoState)
+            {
+            case INIT_DRIVE_TWO_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
                 {
-                case INIT_DRIVE_TWO_R:
-                    if (lineFollowTillLine(leftSensor, rightSensor, error))
-                    {
-                        returnTwoState = PREP_MOVE_TURN_TWO_R;
-                    }
-                    break;
-                case PREP_MOVE_TURN_TWO_R:
-                    if (driveInches(3, DRIVE_SPEED))
-                    {
-                        returnTwoState = PREP_TURN_TWO_R;
-                    }
-                    break;
-                case PREP_TURN_TWO_R:
-                    if (turn(-45, TURN_SPEED))
-                    {
-                        returnTwoState = TURN_TWO_R;
-                    }
-                    break;
-                case TURN_TWO_R:
-                    if (alignToLine(-1, leftSensor, rightSensor))
-                    {
-                        returnTwoState = FINAL_FOR_TWO_R;
-                        //isInPrepPos = true;
-                    }
-                    break;
-                case FINAL_FOR_TWO_R:
-                    if (lineFollowTillLine(leftSensor, rightSensor, error))
-                    {
-                        returnTwoState = INIT_DRIVE_TWO_R;
-                        return true;
-                    }
-                    break;
+                    returnTwoState = PREP_MOVE_TURN_TWO_R;
                 }
                 break;
-            case -1:
-                dropZone = 0;
+            case PREP_MOVE_TURN_TWO_R:
+                if (driveInches(2.5, DRIVE_SPEED))
+                {
+                    returnTwoState = PREP_TURN_TWO_R;
+                }
+                break;
+            case PREP_TURN_TWO_R:
+                if (turn(-60, TURN_SPEED))
+                {
+                    returnTwoState = TURN_TWO_R;
+                }
+                break;
+            case TURN_TWO_R:
+                if (alignToLine(-1, leftSensor, rightSensor))
+                {
+                    returnTwoState = FINAL_FOR_TWO_R;
+                }
+                break;
+            case FINAL_FOR_TWO_R:
+                if (lineFollowTillLine(leftSensor, rightSensor, error))
+                {
+                    returnTwoState = INIT_DRIVE_TWO_R;
+                    return true;
+                }
                 break;
             }
-        }
-        //if in correct position, go to intersection closest to start
-        else if (returnFromPrepDropPos(leftSensor, rightSensor, error) == true)
-        {
-            isInPrepPos = false;
-            return true;
+            break;
+        case -1:
+            dropZone = 0;
+            break;
         }
 
         return false;

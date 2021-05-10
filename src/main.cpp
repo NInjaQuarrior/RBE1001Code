@@ -72,8 +72,10 @@ PickUpBagState pickUpState = DRIVE_TO_BAG;
 enum DropBagState
 {
   TURN_AROUND_D,
+  ALIGN_LINE_DROP,
   BACK_UP_D,
-  DRIVE_FOR_TWO
+  DRIVE_FOR_TWO,
+  ALIGN_LINE
 
 };
 
@@ -96,7 +98,7 @@ boolean pickUpBag()
   case DRIVE_TO_BAG:
     servo.moveDownPosition();
     distAwayFromBag = ultra.getDistanceIN();
-    if (drive.driveToInches(4, ultra.getDistanceIN()))
+    if (drive.driveToInches(5, ultra.getDistanceIN()))
     {
       pickUpState = TURN_AROUND_PICKUP;
     }
@@ -138,17 +140,24 @@ boolean dropOffBag()
   switch (dropBagState)
   {
   case TURN_AROUND_D:
-    if (drive.turn(180, 180))
+    if (drive.turn(190, 75))
     {
       dropBagState = BACK_UP_D;
     }
+    break;
+  case ALIGN_LINE_DROP:
+    if (drive.alignToLine(1, lSensor.getLeft(), lSensor.getRight()))
+    {
+      dropBagState = BACK_UP_D;
+    }
+
     break;
   case BACK_UP_D:
 
     if (drive.driveInches(-1, 180))
     {
       dropBagState = DRIVE_FOR_TWO;
-      servo.moveDownPosition();
+      servo.moveMidPosition();
       delay(500);
     }
     break;
@@ -158,6 +167,13 @@ boolean dropOffBag()
     {
       dropBagState = TURN_AROUND_D;
       return true;
+    }
+    break;
+  case ALIGN_LINE:
+
+    if (drive.alignToLine(1, lSensor.getLeft(), lSensor.getRight()))
+    {
+      dropBagState = TURN_AROUND_D;
     }
     break;
   }
@@ -209,7 +225,7 @@ boolean pickUpBagFree()
   //turn around prepared to pick up
   case TURN_AROUND:
     //turn around to pick up bag
-    if (drive.turn(190, 180))
+    if (drive.turn(190, 150))
     {
       freeZoneState = REVERSE;
     }
@@ -217,7 +233,7 @@ boolean pickUpBagFree()
   //put the arm under the bag handle
   case REVERSE:
     //reverse putting arm in the handle
-    if (drive.driveInches(-3, 270))
+    if (drive.driveInches(-2, 150))
     {
       freeZoneState = PICK_UP;
     }
@@ -386,6 +402,7 @@ void autoFinalDemo()
     //do it again, like BOSS or a very persistant failure
     case DONE_AUTO:
       autoState = INIT_AUTO;
+      inFreeZone = false;
       break;
     }
   }
@@ -411,7 +428,7 @@ void setup()
   decoder.init();
   servo.moveMidPosition();
 
-  delay(4000);
+  //delay(4000);
 }
 
 //boolean used to only run a function once
