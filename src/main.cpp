@@ -19,7 +19,7 @@ LineSense lSensor;
 //ArmServo class obkect
 ArmServo servo;
 //deadband for if bag in pickup zone
-const float BAG_PRESENT_DEAD = 10; //TODO tune
+const float BAG_PRESENT_DEAD = 12; //TODO tune
 
 const uint8_t IR_DETECTOR_PIN = 15;
 IRDecoder decoder(15);
@@ -51,6 +51,8 @@ enum AutoState
   DRIVE_TO_DROP_WITH_BAG,
   DROP_OFF_BAG,
   RETURN_FROM_DROP,
+  TURN_TO_START_PREP,
+  TURN_TO_START,
   GET_IN_START_ZONE,
   DONE_AUTO
 };
@@ -66,6 +68,16 @@ enum PickUpBagState
 };
 
 PickUpBagState pickUpState = DRIVE_TO_BAG;
+
+enum DropBagState
+{
+  TURN_AROUND_D,
+  BACK_UP_D,
+  DRIVE_FOR_TWO
+
+};
+
+DropBagState dropBagState = TURN_AROUND_D;
 
 //END declarations +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -84,21 +96,21 @@ boolean pickUpBag()
   case DRIVE_TO_BAG:
     servo.moveDownPosition();
     distAwayFromBag = ultra.getDistanceIN();
-    if (drive.driveToInches(2.5, ultra.getDistanceIN()))
+    if (drive.driveToInches(4, ultra.getDistanceIN()))
     {
       pickUpState = TURN_AROUND_PICKUP;
     }
     break;
     //hook facing bag
   case TURN_AROUND_PICKUP:
-    if (drive.turn(180, 180))
+    if (drive.turn(183, 180))
     {
       pickUpState = REVERSE_PICKUP;
     }
     break;
     //back into bag and lift it up
   case REVERSE_PICKUP:
-    if (drive.driveInches(-2.5, 270))
+    if (drive.driveInches(-2, 270))
     {
       servo.moveUpPosition();
       pickUpState = RETURN_TO_LINE_PICKUP;
@@ -123,11 +135,33 @@ boolean pickUpBag()
 boolean dropOffBag()
 {
   //maybe go to mid for dropping off
-  servo.moveDownPosition();
-  if (drive.driveInches(-3, 180))
+  switch (dropBagState)
   {
-    return true;
+  case TURN_AROUND_D:
+    if (drive.turn(180, 180))
+    {
+      dropBagState = BACK_UP_D;
+    }
+    break;
+  case BACK_UP_D:
+
+    if (drive.driveInches(-1, 180))
+    {
+      dropBagState = DRIVE_FOR_TWO;
+      servo.moveDownPosition();
+      delay(500);
+    }
+    break;
+  case DRIVE_FOR_TWO:
+
+    if (drive.driveInches(4, 180))
+    {
+      dropBagState = TURN_AROUND_D;
+      return true;
+    }
+    break;
   }
+
   return false;
 }
 
@@ -183,7 +217,7 @@ boolean pickUpBagFree()
   //put the arm under the bag handle
   case REVERSE:
     //reverse putting arm in the handle
-    if (drive.driveInches(-2.5, 270))
+    if (drive.driveInches(-3, 270))
     {
       freeZoneState = PICK_UP;
     }
@@ -223,6 +257,7 @@ int dropZone = -1;
 
 void autoFinalDemo()
 {
+
   int16_t keyPress = decoder.getKeyCode();
 
   //if hit play give control to remote
@@ -240,9 +275,12 @@ void autoFinalDemo()
       dropZone = -1;
       inFreeZone = false;
       servo.moveMidPosition();
+      drive.isInPrepPos = false;
+      autoState = WAIT_TO_START;
       break;
     //dont start until given drop zone
     case WAIT_TO_START:
+
       switch (keyPress)
       {
       case remote1:
@@ -326,8 +364,20 @@ void autoFinalDemo()
       }
       break;
     //drive a little to get into start zone
+    case TURN_TO_START_PREP:
+      if (drive.turn(-45, 180))
+      {
+        autoState = TURN_TO_START;
+      }
+      break;
+    case TURN_TO_START:
+      if (drive.alignToLine(-1, lSensor.getLeft(), lSensor.getRight()))
+      {
+        autoState = GET_IN_START_ZONE;
+      }
+      break;
     case GET_IN_START_ZONE:
-      if (drive.driveInches(7, 270))
+      if (drive.driveInches(7, 180))
       {
         autoState = DONE_AUTO;
       }
