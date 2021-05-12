@@ -50,13 +50,6 @@ const int DIR_LEFT = -1;
 //turn right
 const int DIR_RIGHT = 1;
 
-//constants for plat states
-const int GROUND_PLAT = 0;
-
-const int MEDIUM_PLAT = 1;
-
-const int HIGH_PLAT = 2;
-
 //distance to move the robot into the start zone from the nearest intersection
 const float DIST_TO_START = 7.0f;
 
@@ -96,8 +89,6 @@ enum AutoState
   DRIVE_TO_DROP_WITH_BAG,
   DROP_OFF_BAG,
   RETURN_FROM_DROP,
-  TURN_TO_START_PREP,
-  TURN_TO_START,
   GET_IN_START_ZONE,
   DONE_AUTO
 };
@@ -119,10 +110,8 @@ PickUpBagState pickUpState = DRIVE_TO_BAG;
 enum DropBagState
 {
   TURN_AROUND_D,
-  ALIGN_LINE_DROP,
   BACK_UP_D,
-  DRIVE_FOR_D,
-  ALIGN_LINE
+  DRIVE_FOR_D
 
 };
 
@@ -130,9 +119,39 @@ DropBagState dropBagState = TURN_AROUND_D;
 
 //END enums +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+//START sensor value variables
+float leftSense;
+float rightSense;
+float error;
+
+//ultrasonic
+float curDistIN;
+float curDistCM;
+
+//remote
+u16_t keyPress;
+
+//END sensor value varables
+
 //END declarations +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //START utility classes=============================================================
+
+void updateValues()
+{
+
+  //light sensor
+  leftSense = lSensor.getLeft();
+  rightSense = lSensor.getRight();
+  error = lSensor.getDifference();
+
+  //ultrasonic
+  curDistIN = ultra.getDistanceIN();
+  curDistCM = ultra.getDistanceCM();
+
+  //remote
+  keyPress = decoder.getKeyCode();
+}
 
 //store how far the bag is when robot start moving to it
 float distAwayFromBag = 0;
@@ -151,10 +170,10 @@ boolean pickUpBag()
     servo.moveDownPosition();
 
     //save the distance we need to move to the bag
-    distAwayFromBag = ultra.getDistanceIN();
+    distAwayFromBag = curDistIN;
 
     //drive to bag
-    if (drive.driveTo(5, ultra.getDistanceIN()))
+    if (drive.driveTo(5, curDistIN))
     {
       pickUpState = TURN_AROUND_PICKUP;
     }
@@ -267,7 +286,7 @@ boolean pickUpBagFree()
   case TURN_AROUND_ONE:
 
     //align to the line going left
-    if (drive.alignToLine(DIR_LEFT, lSensor.getLeft(), lSensor.getRight()))
+    if (drive.alignToLine(DIR_LEFT, leftSense, rightSense))
     {
       freeZoneState = DRIVE_FORWARD_ONE;
     }
@@ -283,7 +302,7 @@ boolean pickUpBagFree()
 
   //scan and find the bag and drives towards it
   case GO_TO_BAG:
-    if (drive.findBag(ultra.getDistanceIN()))
+    if (drive.findBag(curDistIN))
     {
       freeZoneState = TURN_AROUND;
     }
@@ -292,7 +311,7 @@ boolean pickUpBagFree()
   //turn around prepared to pick up
   case TURN_AROUND:
     //turn 180 + compensation around to pick up bag
-    if (drive.turn(180 + 7, 120))
+    if (drive.turn(180 + 7, TURN_SPEED_SLOW))
     {
       freeZoneState = REVERSE;
     }
@@ -317,7 +336,7 @@ boolean pickUpBagFree()
   //return to the line after picking up the bag
   case RETURN_TO_LINE:
 
-    if (drive.returnFromFree(lSensor.getLeft(), lSensor.getRight()))
+    if (drive.returnFromFree(leftSense, rightSense))
     {
       freeZoneState = DONE;
     }
@@ -347,9 +366,6 @@ int dropZone = -1;
  */
 void autoFinalDemo()
 {
-  //track remote press
-  u16_t keyPress = decoder.getKeyCode();
-
   switch (autoState)
   {
   case INIT_AUTO:
@@ -361,7 +377,6 @@ void autoFinalDemo()
     //servo in middle position
     servo.moveMidPosition();
 
-    drive.isInPrepPos = false; //TODO
     autoState = WAIT_TO_START;
     break;
 
@@ -372,15 +387,15 @@ void autoFinalDemo()
     {
 
     case remote1:
-      dropZone = GROUND_PLAT;
+      dropZone = 0;
       break;
 
     case remote2:
-      dropZone = MEDIUM_PLAT;
+      dropZone = 1;
       break;
 
     case remote3:
-      dropZone = HIGH_PLAT;
+      dropZone = 2;
       break;
     }
     if (dropZone != -1)
@@ -394,7 +409,7 @@ void autoFinalDemo()
   case DRIVE_TO_PICKUP:
 
     //stop if either the robot reaches the intersection or it detects a bag
-    if (drive.lineFollowTillLine(lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()) || ultra.getDistanceIN() < BAG_PRESENT_DEAD)
+    if (drive.lineFollowTillLine(leftSense, rightSense, error) || curDistIN < BAG_PRESENT_DEAD)
     {
       autoState = CHOOSE_BAG;
     }
@@ -404,7 +419,7 @@ void autoFinalDemo()
   case CHOOSE_BAG:
 
     //if a bag is not detected
-    if (ultra.getDistanceIN() > BAG_PRESENT_DEAD)
+    if (curDistIN > BAG_PRESENT_DEAD)
     {
       //the bag is in the free zone
       inFreeZone = true;
@@ -439,7 +454,7 @@ void autoFinalDemo()
   case DRIVE_TO_FIRST_SECT:
 
     //follow line until reach the intersection
-    if (drive.lineFollowTillLine(lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
+    if (drive.lineFollowTillLine(leftSense, rightSense, error))
     {
       autoState = DRIVE_TO_DROP_WITH_BAG;
     }
@@ -448,7 +463,7 @@ void autoFinalDemo()
   //drive to the desinated drop zone, always go around the construction zone
   case DRIVE_TO_DROP_WITH_BAG:
     //drive to drop zone
-    if (drive.driveToDropZone(dropZone, lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference(), ultra.getDistanceIN()))
+    if (drive.driveToDropZone(dropZone, leftSense, rightSense, error, curDistIN))
     {
       autoState = DROP_OFF_BAG;
     }
@@ -466,7 +481,7 @@ void autoFinalDemo()
   //return to intersect near start zone depending on where the bag was dropped off
   case RETURN_FROM_DROP:
 
-    if (drive.returnFromDropZone(dropZone, lSensor.getLeft(), lSensor.getRight(), lSensor.getDifference()))
+    if (drive.returnFromDropZone(dropZone, leftSense, rightSense, error))
     {
       autoState = GET_IN_START_ZONE;
     }
@@ -518,6 +533,8 @@ void setup()
  */
 void loop()
 {
+  //update sensor values
+  updateValues();
   //run the demo for final
   autoFinalDemo();
 }

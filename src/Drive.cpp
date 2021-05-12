@@ -41,17 +41,53 @@ private:
     //angle to scan while looking for object
     const float SCAN_ANGLE = 150.0f;
 
-    //speed to turn while scanning for object in degrees per second
-    const float SCAN_SPEED = 270.0f;
-
     //distance to stop away from bag to pick it up
-    const float DIST_FROM_BAG = 5.5f; //TODO tune
+    const float DIST_FROM_BAG = 5.5f;
 
     //max distance that the ultra will care about while scanning for a bag
     const float MAX_DIST = 25.0f;
 
+    //speed to turn while scanning for object in degrees per second
+    const float SCAN_SPEED = 270.0f;
+
     //degrees per second to move in teleop
     const float TELEOP_SPEED = 180.0f;
+
+    //medium drive speed
+    const float DRIVE_SPEED_MED = 180.0f;
+
+    //fast drive speed
+    const float DRIVE_SPEED_FAST = 270.0f;
+
+    //slow drive speed
+    const float DRIVE_SPEED_SLOW = 70.0f;
+
+    //angle for preparing to align to the line with the light sensors
+    const float PREP_ALIGN_ANGLE = 60.0f;
+
+    const float CENTER_ROBOT_DIST = 4.0f;
+
+    //turn speed in degrees per second medium
+    const float TURN_SPEED_MED = 180.0f;
+
+    //turn speed in degrees per second
+    const float TURN_SPEED_FAST = 270.0f;
+
+    //turn speed in degrees per second
+    const float TURN_SPEED_SLOW = 70.0f;
+
+    //turn left
+    const int DIR_LEFT = -1;
+
+    //turn right
+    const int DIR_RIGHT = 1;
+
+    //constants for plat states
+    const int GROUND_PLAT = 0;
+
+    const int MEDIUM_PLAT = 1;
+
+    const int HIGH_PLAT = 2;
 
     //end constantsssss+++++++++++++++++++++++++++++++++++++++++++
 
@@ -64,10 +100,7 @@ private:
         SCANNING,
         TURN_TO,
         DRIVE_SCAN,
-        EXTRA_TURN,
-        FINAL_CENTER,
-        DONE_SCAN,
-        TURN_TO_CENTER
+        DONE_SCAN
     };
 
     ScanState scanState = INIT_SCAN;
@@ -109,7 +142,6 @@ private:
         PREP_MOVE_TURN_ONE,
         PREP_TURN_ONE,
         TURN_ONE,
-        DRIVE_TO_ZONE_ONE,
         FINAL_MOVE_ONE
     };
 
@@ -637,7 +669,7 @@ public:
         {
             switch (dropZone)
             {
-            case GROUND_PLAT:
+            case 0:
                 switch (dropZeroState)
                 {
 
@@ -704,7 +736,7 @@ public:
                 }
                 break;
             //1.5in dropzone
-            case MEDIUM_PLAT:
+            case 1:
                 switch (dropOneState)
                 {
                 //center robot on intersection
@@ -868,7 +900,7 @@ public:
         switch (dropZone)
         {
         //at ground zone
-        case GROUND_PLAT:
+        case 0:
             switch (returnZeroState)
             {
             //follow the line to the next intersection
@@ -915,7 +947,7 @@ public:
             break;
 
         //at 1.5in zone
-        case MEDIUM_PLAT:
+        case 1:
 
             switch (returnOneState)
             {
@@ -942,7 +974,7 @@ public:
             break;
 
         //at 3in zone
-        case HIGH_PLAT:
+        case 2:
             switch (returnTwoState)
             {
 
