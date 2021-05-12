@@ -555,7 +555,7 @@ public:
 
         //turn to center of bag
         case TURN_TO_SCAN:
-            //calculat distane to turn to bag center
+            //calculate distane to turn to bag center
             bagCenter = bagEndAngle - bagStartAngle;
 
             //turn to bag center -5 to be safe with turning
