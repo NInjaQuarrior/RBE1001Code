@@ -8,15 +8,15 @@ private:
 
     ESP32AnalogRead rightSensor;
 
+    //port for left sensor
     const int leftPort = 36;
-
+    //port for right sensor
     const int rightPort = 39;
 
 public:
     /**
- *  attaches the line sensor. Must call in main class
- * 
- */
+    *  attaches the line sensor. Must call in main class
+    */
     void attach()
     {
         leftSensor.attach(leftPort);

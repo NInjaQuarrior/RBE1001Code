@@ -5,6 +5,7 @@ class ArmServo
 private:
     Servo servo;
 
+    //pin
     const int servoPin = 33;
 
     //arm in up pos
@@ -16,32 +17,32 @@ private:
 
 public:
     /**
- * attachs the servo, must be called in main class
- */
+    * attachs the servo, must be called in main class
+    */
     void attach()
     {
         servo.attach(servoPin);
     }
 
     /**
- * moves the arm to down to the ground
- */
+    * moves the arm to down to the ground
+    */
     void moveDownPosition()
     {
         servo.write(downPos);
     }
 
     /**
- * moves the arm to parrallel to the ground
- */
+    * moves the arm to parrallel to the ground
+    */
     void moveMidPosition()
     {
         servo.write(midPos);
     }
 
     /**
- * moves the arm to up to the ground
- */
+    * moves the arm to up to the ground
+    */
     void moveUpPosition()
     {
         servo.write(upPos);
