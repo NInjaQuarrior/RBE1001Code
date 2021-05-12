@@ -42,7 +42,7 @@ private:
     const float SCAN_ANGLE = 150.0f;
 
     //distance to stop away from bag to pick it up
-    const float DIST_FROM_BAG = 5.5f;
+    const float DIST_FROM_BAG = 6.0f;
 
     //max distance that the ultra will care about while scanning for a bag
     const float MAX_DIST = 25.0f;
@@ -65,7 +65,7 @@ private:
     //angle for preparing to align to the line with the light sensors
     const float PREP_ALIGN_ANGLE = 60.0f;
 
-    const float CENTER_ROBOT_DIST = 4.0f;
+    const float CENTER_ROBOT_DIST = 3.0f;
 
     //turn speed in degrees per second medium
     const float TURN_SPEED_MED = 180.0f;
@@ -98,7 +98,7 @@ private:
     {
         INIT_SCAN,
         SCANNING,
-        TURN_TO,
+        TURN_TO_SCAN,
         DRIVE_SCAN,
         DONE_SCAN
     };
@@ -108,14 +108,14 @@ private:
     //for returning to line from picking up bag from free zone
     enum ReturnStateFree
     {
-        TURN_RETURN,
-        TURN_TWO,
-        DRIVE_RETURN,
-        DRIVE_TO_LINE,
-        DONE_RETURN
+        TURN_RETURN_FREE,
+        TURN_TWO_FREE,
+        DRIVE_RETURN_FREE,
+        DRIVE_TO_LINE_FREE,
+        DONE_RETURN_FREE
     };
 
-    ReturnStateFree returnState = TURN_RETURN;
+    ReturnStateFree returnState = TURN_RETURN_FREE;
 
     //for going to the ground platform
     enum DropZeroState
@@ -199,13 +199,13 @@ private:
     enum MoveToPrepState
     {
         INIT_DRIVE_P,
-        PREP_RIGHT_TURN_ONE,
+        PREP_RIGHT_TURN_ONE_P,
         RIGHT_TURN_P,
-        DRIVE_TO_SECOND_SECT,
+        DRIVE_TO_SECOND_SECT_P,
         SEC_DRIVE_P,
-        PREP_LEFT_TURN,
+        PREP_LEFT_TURN_P,
         LEFT_TURN_ONE_P,
-        DRIVE_TO_THIRD_SECT
+        DRIVE_TO_THIRD_SECT_P
     };
 
     MoveToPrepState movePrepState = INIT_DRIVE_P;
@@ -378,14 +378,8 @@ public:
         }
 
         //move the robot to right distance
-        if (curDist < targetDist + ULTRA_DEAD)
-        {
-            setSpeed(ULTRA_DRIVE);
-        }
-        else if (curDist > targetDist - ULTRA_DEAD)
-        {
-            setSpeed(-ULTRA_DRIVE);
-        }
+        setSpeed(ULTRA_DRIVE);
+
         return false;
     }
 
@@ -552,7 +546,7 @@ public:
                     bagEndAngle = counter;
                     //reset counter
                     counter = 1;
-                    scanState = TURN_TO;
+                    scanState = TURN_TO_SCAN;
                 }
                 //keep track of current angle
                 counter++;
@@ -560,7 +554,7 @@ public:
             break;
 
         //turn to center of bag
-        case TURN_TO:
+        case TURN_TO_SCAN:
             //calculat distane to turn to bag center
             bagCenter = bagEndAngle - bagStartAngle;
 
@@ -603,46 +597,46 @@ public:
         {
 
         //turn towards the line
-        case TURN_RETURN:
+        case TURN_RETURN_FREE:
             //attempt to face perpendicular to the line
             if (turn((Turn_SET_UP_ANGLE + (bagCenter / 2)), TURN_SPEED_MED))
             {
-                returnState = DRIVE_RETURN;
+                returnState = DRIVE_RETURN_FREE;
             }
             break;
 
         //go back to the line
-        case DRIVE_RETURN:
+        case DRIVE_RETURN_FREE:
             //drive until found the line
             if (driveTillLine(DRIVE_SPEED_MED, leftSense, rightSense))
             {
-                returnState = DRIVE_TO_LINE;
+                returnState = DRIVE_TO_LINE_FREE;
             }
             break;
 
         //center the robot on the line
-        case DRIVE_TO_LINE:
+        case DRIVE_TO_LINE_FREE:
             //center robot on the line
             if (driveInches(CENTER_ROBOT_DIST, DRIVE_SPEED_MED))
             {
-                returnState = TURN_TWO;
+                returnState = TURN_TWO_FREE;
             }
             break;
         //align to the line
-        case TURN_TWO:
+        case TURN_TWO_FREE:
 
             //reset robot on line
             if (alignToLine(DIR_RIGHT, leftSense, rightSense))
             {
-                returnState = DONE_RETURN;
+                returnState = DONE_RETURN_FREE;
             }
             break;
 
-        case DONE_RETURN:
+        case DONE_RETURN_FREE:
             //reset variables
             bagCenter = 0;
             counter = 1;
-            returnState = TURN_RETURN;
+            returnState = TURN_RETURN_FREE;
             return true;
             break;
         }
@@ -1046,12 +1040,12 @@ public:
         case INIT_DRIVE_P:
             if (driveInches(CENTER_ROBOT_DIST, DRIVE_SPEED_MED))
             {
-                movePrepState = PREP_RIGHT_TURN_ONE;
+                movePrepState = PREP_RIGHT_TURN_ONE_P;
             }
             break;
 
         //turn right off the line
-        case PREP_RIGHT_TURN_ONE:
+        case PREP_RIGHT_TURN_ONE_P:
             if (turn(PREP_ALIGN_ANGLE, TURN_SPEED_SLOW))
             {
                 movePrepState = RIGHT_TURN_P;
@@ -1062,12 +1056,12 @@ public:
         case RIGHT_TURN_P:
             if (alignToLine(DIR_RIGHT, leftSense, rightSense))
             {
-                movePrepState = DRIVE_TO_SECOND_SECT;
+                movePrepState = DRIVE_TO_SECOND_SECT_P;
             }
             break;
 
         //drive to next intersection
-        case DRIVE_TO_SECOND_SECT:
+        case DRIVE_TO_SECOND_SECT_P:
             if (lineFollowTillLine(leftSense, rightSense, error))
             {
                 movePrepState = SEC_DRIVE_P;
@@ -1078,12 +1072,12 @@ public:
         case SEC_DRIVE_P:
             if (driveInches(CENTER_ROBOT_DIST, DRIVE_SPEED_MED))
             {
-                movePrepState = PREP_LEFT_TURN;
+                movePrepState = PREP_LEFT_TURN_P;
             }
             break;
 
         //turn robot left off of line
-        case PREP_LEFT_TURN:
+        case PREP_LEFT_TURN_P:
             if (turn(-PREP_ALIGN_ANGLE, TURN_SPEED_SLOW))
             {
                 movePrepState = LEFT_TURN_ONE_P;
@@ -1094,12 +1088,12 @@ public:
         case LEFT_TURN_ONE_P:
             if (alignToLine(-PREP_ALIGN_ANGLE, leftSense, rightSense))
             {
-                movePrepState = DRIVE_TO_THIRD_SECT;
+                movePrepState = DRIVE_TO_THIRD_SECT_P;
             }
             break;
 
         //drive until reach intersection closest to 3in plat
-        case DRIVE_TO_THIRD_SECT:
+        case DRIVE_TO_THIRD_SECT_P:
             if (lineFollowTillLine(leftSense, rightSense, error))
             {
                 movePrepState = INIT_DRIVE_P;

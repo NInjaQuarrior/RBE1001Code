@@ -63,33 +63,33 @@ IRDecoder decoder(15);
 //for picking up a bag from freezon
 enum FreeZoneState
 {
-  INIT,
-  INIT_TURN_AROUND_ONE,
-  TURN_AROUND_ONE,
-  DRIVE_FORWARD_ONE,
-  GO_TO_BAG,
-  TURN_AROUND,
-  REVERSE,
-  PICK_UP,
-  RETURN_TO_LINE,
-  DONE
+  INIT_FREE,
+  PREP_TURN_AROUND_ONE_FREE,
+  TURN_AROUND_ONE_FREE,
+  DRIVE_FORWARD_FREE,
+  GO_TO_BAG_FREE,
+  TURN_AROUND_TWO_FREE,
+  REVERSE_FREE,
+  PICK_UP_FREE,
+  RETURN_TO_LINE_FREE,
+  DONE_FREE
 };
 
-FreeZoneState freeZoneState = INIT;
+FreeZoneState freeZoneState = INIT_FREE;
 
 // for completing the final demo autonomously
 enum AutoState
 {
   INIT_AUTO,
-  WAIT_TO_START,
-  DRIVE_TO_PICKUP,
-  CHOOSE_BAG,
-  PICKUP_BAG,
-  DRIVE_TO_FIRST_SECT,
-  DRIVE_TO_DROP_WITH_BAG,
-  DROP_OFF_BAG,
-  RETURN_FROM_DROP,
-  GET_IN_START_ZONE,
+  WAIT_TO_START_AUTO,
+  DRIVE_TO_PICKUP_AUTO,
+  CHOOSE_BAG_AUTO,
+  PICKUP_BAG_AUTO,
+  DRIVE_TO_FIRST_SECT_AUTO,
+  DRIVE_TO_DROP_WITH_BAG_AUTO,
+  DROP_OFF_BAG_AUTO,
+  RETURN_FROM_DROP_AUTO,
+  GET_IN_START_ZONE_AUTO,
   DONE_AUTO
 };
 
@@ -98,13 +98,13 @@ AutoState autoState = INIT_AUTO;
 //for picking up the bag
 enum PickUpBagState
 {
-  DRIVE_TO_BAG,
-  TURN_AROUND_PICKUP,
-  REVERSE_PICKUP,
-  RETURN_TO_LINE_PICKUP
+  DRIVE_TO_BAG_ZONE,
+  TURN_AROUND_PICKUP_ZONE,
+  REVERSE_PICKUP_ZONE,
+  RETURN_TO_LINE_PICKUP_ZONE
 };
 
-PickUpBagState pickUpState = DRIVE_TO_BAG;
+PickUpBagState pickUpState = DRIVE_TO_BAG_ZONE;
 
 //for dropping the bag
 enum DropBagState
@@ -164,7 +164,7 @@ boolean pickUpBag()
   switch (pickUpState)
   {
     //drives to the bag
-  case DRIVE_TO_BAG:
+  case DRIVE_TO_BAG_ZONE:
 
     //lower arm
     servo.moveDownPosition();
@@ -175,40 +175,40 @@ boolean pickUpBag()
     //drive to bag
     if (drive.driveTo(5, curDistIN))
     {
-      pickUpState = TURN_AROUND_PICKUP;
+      pickUpState = TURN_AROUND_PICKUP_ZONE;
     }
     break;
 
     //rotate so that the hook is facing the bag
-  case TURN_AROUND_PICKUP:
+  case TURN_AROUND_PICKUP_ZONE:
 
     //turn
     if (drive.turn(183, DRIVE_SPEED_MED))
     {
-      pickUpState = REVERSE_PICKUP;
+      pickUpState = REVERSE_PICKUP_ZONE;
     }
     break;
 
     //back into bag and lift it up
-  case REVERSE_PICKUP:
+  case REVERSE_PICKUP_ZONE:
     //get hook under bag handle
     if (drive.driveInches(-2, DRIVE_SPEED_FAST))
     {
       //move servo up to pick up bag
       servo.moveUpPosition();
-      pickUpState = RETURN_TO_LINE_PICKUP;
+      pickUpState = RETURN_TO_LINE_PICKUP_ZONE;
     }
     break;
 
   //return to line
-  case RETURN_TO_LINE_PICKUP:
+  case RETURN_TO_LINE_PICKUP_ZONE:
     //return to the line and a little past it
     if (drive.driveInches(distAwayFromBag + 4, DRIVE_SPEED_MED))
     {
       //reset distAwayFromBag
       distAwayFromBag = 0;
 
-      pickUpState = DRIVE_TO_BAG;
+      pickUpState = DRIVE_TO_BAG_ZONE;
       //done
       return true;
     }
@@ -267,84 +267,84 @@ boolean pickUpBagFree()
   switch (freeZoneState)
   {
 
-  case INIT:
+  case INIT_FREE:
     //lower servo to prepare for pickup
     servo.moveDownPosition();
 
-    freeZoneState = INIT_TURN_AROUND_ONE;
+    freeZoneState = PREP_TURN_AROUND_ONE_FREE;
     break;
 
   //Initial turn away form line
-  case INIT_TURN_AROUND_ONE:
+  case PREP_TURN_AROUND_ONE_FREE:
     if (drive.turn(-PREP_ALIGN_ANGLE, DRIVE_SPEED_MED))
     {
-      freeZoneState = TURN_AROUND_ONE;
+      freeZoneState = TURN_AROUND_ONE_FREE;
     }
     break;
 
   //turn around so facing away from pickup zone
-  case TURN_AROUND_ONE:
+  case TURN_AROUND_ONE_FREE:
 
     //align to the line going left
     if (drive.alignToLine(DIR_LEFT, leftSense, rightSense))
     {
-      freeZoneState = DRIVE_FORWARD_ONE;
+      freeZoneState = DRIVE_FORWARD_FREE;
     }
     break;
 
     //drive forward a bit to center of free zone
-  case DRIVE_FORWARD_ONE:
+  case DRIVE_FORWARD_FREE:
     if (drive.driveInches(5, DRIVE_SPEED_FAST))
     {
-      freeZoneState = GO_TO_BAG;
+      freeZoneState = GO_TO_BAG_FREE;
     }
     break;
 
   //scan and find the bag and drives towards it
-  case GO_TO_BAG:
+  case GO_TO_BAG_FREE:
     if (drive.findBag(curDistIN))
     {
-      freeZoneState = TURN_AROUND;
+      freeZoneState = TURN_AROUND_TWO_FREE;
     }
     break;
 
   //turn around prepared to pick up
-  case TURN_AROUND:
+  case TURN_AROUND_TWO_FREE:
     //turn 180 + compensation around to pick up bag
     if (drive.turn(180 + 7, TURN_SPEED_SLOW))
     {
-      freeZoneState = REVERSE;
+      freeZoneState = REVERSE_FREE;
     }
     break;
 
   //put the arm under the bag handle
-  case REVERSE:
+  case REVERSE_FREE:
     //reverse putting arm in the handle
     if (drive.driveInches(-2, DRIVE_SPEED_MED))
     {
-      freeZoneState = PICK_UP;
+      freeZoneState = PICK_UP_FREE;
     }
     break;
 
   //pick up bag
-  case PICK_UP:
+  case PICK_UP_FREE:
     //lift up arm
     servo.moveUpPosition();
-    freeZoneState = RETURN_TO_LINE;
+    freeZoneState = RETURN_TO_LINE_FREE;
     break;
 
   //return to the line after picking up the bag
-  case RETURN_TO_LINE:
+  case RETURN_TO_LINE_FREE:
 
     if (drive.returnFromFree(leftSense, rightSense))
     {
-      freeZoneState = DONE;
+      freeZoneState = DONE_FREE;
     }
     break;
 
     //reset stuff
-  case DONE:
-    freeZoneState = INIT;
+  case DONE_FREE:
+    freeZoneState = INIT_FREE;
     return true;
     break;
   }
@@ -377,11 +377,11 @@ void autoFinalDemo()
     //servo in middle position
     servo.moveMidPosition();
 
-    autoState = WAIT_TO_START;
+    autoState = WAIT_TO_START_AUTO;
     break;
 
   //dont start until given drop zone
-  case WAIT_TO_START:
+  case WAIT_TO_START_AUTO:
     //choose platform based on remote press
     switch (keyPress)
     {
@@ -400,23 +400,23 @@ void autoFinalDemo()
     }
     if (dropZone != -1)
     {
-      autoState = DRIVE_TO_PICKUP;
+      autoState = DRIVE_TO_PICKUP_AUTO;
     }
 
     break;
 
   //follow the line until reach pick up zone
-  case DRIVE_TO_PICKUP:
+  case DRIVE_TO_PICKUP_AUTO:
 
     //stop if either the robot reaches the intersection or it detects a bag
     if (drive.lineFollowTillLine(leftSense, rightSense, error) || curDistIN < BAG_PRESENT_DEAD)
     {
-      autoState = CHOOSE_BAG;
+      autoState = CHOOSE_BAG_AUTO;
     }
     break;
 
   //determine where the bag is
-  case CHOOSE_BAG:
+  case CHOOSE_BAG_AUTO:
 
     //if a bag is not detected
     if (curDistIN > BAG_PRESENT_DEAD)
@@ -424,11 +424,11 @@ void autoFinalDemo()
       //the bag is in the free zone
       inFreeZone = true;
     }
-    autoState = PICKUP_BAG;
+    autoState = PICKUP_BAG_AUTO;
     break;
 
   //pick up the bag
-  case PICKUP_BAG:
+  case PICKUP_BAG_AUTO:
 
     //choose how to pick up the bag depending on where the bag is
     if (inFreeZone == true)
@@ -436,7 +436,7 @@ void autoFinalDemo()
       //pick up bag from free zone
       if (pickUpBagFree())
       {
-        autoState = DRIVE_TO_FIRST_SECT;
+        autoState = DRIVE_TO_FIRST_SECT_AUTO;
       }
     }
     else
@@ -444,51 +444,51 @@ void autoFinalDemo()
       //pick up bag from the pick up zone
       if (pickUpBag())
       {
-        autoState = DRIVE_TO_FIRST_SECT;
+        autoState = DRIVE_TO_FIRST_SECT_AUTO;
       }
     }
     break;
 
   //NOTE: robot now facing away from pick up zone
   //drive back to intersect near start area
-  case DRIVE_TO_FIRST_SECT:
+  case DRIVE_TO_FIRST_SECT_AUTO:
 
     //follow line until reach the intersection
     if (drive.lineFollowTillLine(leftSense, rightSense, error))
     {
-      autoState = DRIVE_TO_DROP_WITH_BAG;
+      autoState = DRIVE_TO_DROP_WITH_BAG_AUTO;
     }
     break;
 
   //drive to the desinated drop zone, always go around the construction zone
-  case DRIVE_TO_DROP_WITH_BAG:
+  case DRIVE_TO_DROP_WITH_BAG_AUTO:
     //drive to drop zone
     if (drive.driveToDropZone(dropZone, leftSense, rightSense, error, curDistIN))
     {
-      autoState = DROP_OFF_BAG;
+      autoState = DROP_OFF_BAG_AUTO;
     }
 
     break;
 
   //drop off the bag
-  case DROP_OFF_BAG:
+  case DROP_OFF_BAG_AUTO:
     if (dropOffBag())
     {
-      autoState = RETURN_FROM_DROP;
+      autoState = RETURN_FROM_DROP_AUTO;
     }
     break;
 
   //return to intersect near start zone depending on where the bag was dropped off
-  case RETURN_FROM_DROP:
+  case RETURN_FROM_DROP_AUTO:
 
     if (drive.returnFromDropZone(dropZone, leftSense, rightSense, error))
     {
-      autoState = GET_IN_START_ZONE;
+      autoState = GET_IN_START_ZONE_AUTO;
     }
     break;
 
   //drive a little to get fully into start zone
-  case GET_IN_START_ZONE:
+  case GET_IN_START_ZONE_AUTO:
     if (drive.driveInches(DIST_TO_START, DRIVE_SPEED_MED))
     {
       autoState = DONE_AUTO;
