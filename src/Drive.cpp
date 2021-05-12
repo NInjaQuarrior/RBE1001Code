@@ -212,7 +212,6 @@ private:
 
     //END enums for state machines +++++++++++++++++++++++++++++++++++++++++++
 
-    //TODO remove usless methods from previous activities
 public:
     /**
     * turns a certain amount of degrees
@@ -302,63 +301,6 @@ public:
     {
         left.setSpeed(speed);
         right.setSpeed(speed);
-    }
-
-    /**
-    * uses remote to control robot, numbers scale speed by .1, arrows turn 90 degrees
-    * @param button
-    */
-    void teleOpAuto(uint16_t button)
-    {
-        if (button == remoteLeft)
-        {
-            turn(-45, TURN_SPEED_MED);
-        }
-        else if (button == remoteRight)
-        {
-            turn(45, TURN_SPEED_MED);
-        }
-
-        left.setSpeed(TELEOP_SPEED);
-        right.setSpeed(TELEOP_SPEED);
-    }
-
-    /**
-    * Makes a shape
-    * @param sides numbers of side for the shape
-    * @param sideLength  the length of each side in inches
-    * @param speed degrees per second to move while making shape
-    * @return true when complete
-    */
-    boolean makeShape(int sides, float sideLength, float speed) //TODO delete
-    {
-        float turnDegrees = 360 / sides;
-        for (int i = 0; i < sides; i++)
-        {
-            driveInches(sideLength, speed);
-            turn(turnDegrees, speed);
-        }
-        return true;
-    }
-
-    /**
-    * makes a spiral shape in the shape of the side put in, ie 4 side for square spiral
-    * 
-    * @param baseLength the length of the first side in inches
-    * @param speed, degrees per second to move
-    * @param sides number of sides before completing on spiral
-    * @param spiralAmount number of complete spirals to make
-    * @return true when complete
-    */
-    boolean makeSpiral(float baseLength, float speed, int sides, int spiralAmount) //TODO delete
-    {
-        float turnDegrees = 360 / sides;
-        for (int i = 0; i < (sides * spiralAmount); i++)
-        {
-            driveInches(baseLength + (i * baseLength), speed);
-            turn(turnDegrees, speed);
-        }
-        return true;
     }
 
     /**
